@@ -32,6 +32,8 @@ async def list_jobs(
     source: Optional[JobSource] = Query(default=None),
     remote_status: Optional[RemoteStatus] = Query(default=None),
     min_match_score: Optional[float] = Query(default=None, ge=0, le=100),
+    target_role: Optional[str] = Query(default=None),
+    filter_target_roles: Optional[bool] = Query(default=False),
     sort_by: str = Query(default="discovered_at"),
     sort_order: str = Query(default="desc"),
     db: AsyncSession = Depends(get_db),
@@ -58,6 +60,18 @@ async def list_jobs(
         stmt = stmt.where(Job.remote_status == remote_status)
     if min_match_score is not None:
         stmt = stmt.where(Job.match_score >= min_match_score)
+
+    if target_role:
+        tr_pattern = f"%{target_role.strip()}%"
+        stmt = stmt.where(or_(Job.title.ilike(tr_pattern), Job.description.ilike(tr_pattern)))
+    elif filter_target_roles:
+        cand_res = await db.execute(select(CandidateProfile).limit(1))
+        candidate = cand_res.scalar_one_or_none()
+        if candidate and candidate.preferences and candidate.preferences.get("target_roles"):
+            roles = [r for r in candidate.preferences["target_roles"] if r and r.strip()]
+            if roles:
+                role_clauses = [Job.title.ilike(f"%{r.strip()}%") for r in roles]
+                stmt = stmt.where(or_(*role_clauses))
 
     # Count total
     count_stmt = select(func.count()).select_from(stmt.subquery())

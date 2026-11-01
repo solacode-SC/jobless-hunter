@@ -20,6 +20,12 @@ import {
   Lock,
   Sparkles,
   Paperclip,
+  Target,
+  Check,
+  Plus,
+  X,
+  ArrowRight,
+  Compass,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/main-layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -35,6 +41,8 @@ import {
   getEmailConfig,
   saveEmailConfig,
   testEmailConnection,
+  getTargetRoles,
+  saveTargetRoles,
 } from '@/lib/api';
 import { CandidateProfile } from '@/types';
 
@@ -49,6 +57,14 @@ export default function ProfilePage() {
   const [github, setGithub] = useState('');
   const [linkedin, setLinkedin] = useState('');
   const [skillsStr, setSkillsStr] = useState('');
+
+  // Target Roles & AI Suggested Titles state
+  const [suggestedRoles, setSuggestedRoles] = useState<string[]>([]);
+  const [targetRoles, setTargetRoles] = useState<string[]>([]);
+  const [showRolesModal, setShowRolesModal] = useState(false);
+  const [newCustomRole, setNewCustomRole] = useState('');
+  const [savingRoles, setSavingRoles] = useState(false);
+  const [rolesSavedMessage, setRolesSavedMessage] = useState<string | null>(null);
 
   // CV & Related Files state
   const [cvPath, setCvPath] = useState<string | null>(null);
@@ -78,10 +94,11 @@ export default function ProfilePage() {
 
   const loadData = async () => {
     try {
-      const [p, filesData, emailCfg] = await Promise.all([
+      const [p, filesData, emailCfg, rolesData] = await Promise.all([
         getCandidateProfile(),
         getCandidateFiles(),
         getEmailConfig(),
+        getTargetRoles(),
       ]);
 
       setProfile(p);
@@ -96,6 +113,13 @@ export default function ProfilePage() {
       setSkillsStr((p.skills || []).join(', '));
       setCvPath(p.original_cv_path || filesData.cv_path);
       setRelatedFiles(filesData.files || []);
+
+      if (rolesData) {
+        setTargetRoles(rolesData.target_roles || []);
+        if (rolesData.suggested_job_titles && rolesData.suggested_job_titles.length > 0) {
+          setSuggestedRoles(rolesData.suggested_job_titles);
+        }
+      }
 
       if (emailCfg) {
         setEmailProvider(emailCfg.provider || 'gmail');
@@ -125,13 +149,66 @@ export default function ProfilePage() {
     setFileMessage(null);
     try {
       const res = await uploadCV(file);
-      setCvPath(res.original_cv_path);
-      setFileMessage(`✓ Master CV (${file.name}) parsed and updated!`);
+      setCvPath(res.original_cv_path || null);
+
+      const suggested = res.suggested_job_titles || [];
+      const active = res.active_target_roles || [];
+      setSuggestedRoles(suggested);
+
+      // Initialize selected roles
+      const initialRoles = active.length > 0 ? active : (suggested.length > 0 ? suggested.slice(0, 5) : []);
+      setTargetRoles(initialRoles);
+
+      // Auto update form fields immediately from parsed CV response
+      if (res.candidate) {
+        const c = res.candidate;
+        if (c.name) setName(c.name);
+        if (c.professional_title) setTitle(c.professional_title);
+        if (c.email) setEmail(c.email);
+        if (c.phone) setPhone(c.phone);
+        if (c.summary) setSummary(c.summary);
+        if (c.skills) setSkillsStr(c.skills.join(', '));
+        if (c.portfolio_url) setPortfolio(c.portfolio_url);
+        if (c.github_url) setGithub(c.github_url);
+        if (c.linkedin_url) setLinkedin(c.linkedin_url);
+      }
+
+      setShowRolesModal(true);
+      setFileMessage(`✓ Master CV (${file.name}) parsed! All profile fields updated with extracted facts & 10 matching roles detected.`);
       await loadData();
     } catch (err: any) {
       setFileMessage(`Upload failed: ${err.message}`);
     } finally {
       setUploadingCV(false);
+    }
+  };
+
+  const toggleRole = (role: string) => {
+    if (targetRoles.includes(role)) {
+      setTargetRoles(targetRoles.filter((r) => r !== role));
+    } else {
+      setTargetRoles([...targetRoles, role]);
+    }
+  };
+
+  const handleAddCustomRole = () => {
+    const val = newCustomRole.trim();
+    if (val && !targetRoles.some((r) => r.toLowerCase() === val.toLowerCase())) {
+      setTargetRoles([...targetRoles, val]);
+      setNewCustomRole('');
+    }
+  };
+
+  const handleSaveTargetRoles = async () => {
+    setSavingRoles(true);
+    try {
+      await saveTargetRoles(targetRoles);
+      setRolesSavedMessage(`✓ Saved ${targetRoles.length} target job roles for the agent!`);
+      setTimeout(() => setRolesSavedMessage(null), 4000);
+    } catch (err: any) {
+      setRolesSavedMessage(`Failed to save roles: ${err.message}`);
+    } finally {
+      setSavingRoles(false);
     }
   };
 
@@ -238,6 +315,137 @@ export default function ProfilePage() {
       onRefresh={loadData}
     >
       <div className="space-y-8 max-w-4xl mx-auto">
+        {/* MODAL: 10 MATCHING TARGET ROLES DETECTED FOR CV */}
+        {showRolesModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+            <div className="relative w-full max-w-2xl bg-[#FAFAF5] border-[3px] border-[#111111] shadow-[8px_8px_0_#111111] rounded-[15px_225px_15px_255px/255px_15px_225px_15px] p-6 md:p-8 space-y-6 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-start justify-between gap-4 border-b-2 border-dashed border-[#111111]/20 pb-4">
+                <div>
+                  <span className="inline-block px-2.5 py-0.5 bg-[#FFEB00] border border-[#111111] rounded text-[11px] font-mono font-bold -rotate-1 mb-1.5">
+                    🎯 CV Analysis &amp; Extraction Complete
+                  </span>
+                  <h3 className="font-marker text-2xl md:text-3xl text-[#111111]">
+                    10 Matching Job Titles for Your Profile
+                  </h3>
+                  <p className="font-hand text-base text-[#6B6B66] mt-1">
+                    Select which titles you accept. The agent will immediately filter offers and prioritize applications based on your chosen roles.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowRolesModal(false)}
+                  className="w-8 h-8 rounded-full border-2 border-[#111111] bg-[#FFFFFF] shadow-[2px_2px_0_#111111] flex items-center justify-center hover:bg-[#FFEB00] font-bold"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* 10 Suggested Titles Grid */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs font-mono text-[#6B6B66]">
+                  <span>Click to accept / reject matching roles:</span>
+                  <span className="font-bold text-[#111111]">{targetRoles.length} Accepted</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {(suggestedRoles.length > 0 ? suggestedRoles : [
+                    "Software Engineer",
+                    "Full-Stack Developer",
+                    "DevOps Engineer",
+                    "Backend Systems Engineer",
+                    "Cloud Infrastructure Engineer",
+                    "Linux Systems Engineer",
+                    "Site Reliability Engineer (SRE)",
+                    "Platform Engineer",
+                    "Python Developer",
+                    "Systems Software Engineer",
+                  ]).map((role) => {
+                    const isSelected = targetRoles.includes(role);
+                    return (
+                      <button
+                        type="button"
+                        key={role}
+                        onClick={() => toggleRole(role)}
+                        className={`p-3 rounded-lg border-2 border-[#111111] text-left transition-all flex items-center justify-between gap-2 ${
+                          isSelected
+                            ? 'bg-[#FFEB00] shadow-[3px_3px_0_#111111] -translate-y-0.5'
+                            : 'bg-[#FFFFFF] shadow-[1.5px_1.5px_0_#111111] hover:bg-[#FAFAF5]'
+                        }`}
+                      >
+                        <span className="font-marker text-sm text-[#111111] leading-tight truncate">
+                          {role}
+                        </span>
+                        <span
+                          className={`w-5 h-5 rounded border border-[#111111] flex items-center justify-center shrink-0 ${
+                            isSelected ? 'bg-[#111111] text-[#FFFFFF]' : 'bg-transparent text-transparent'
+                          }`}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Add Custom Role */}
+              <div className="p-3 bg-[#FFFFFF] border-2 border-[#111111] rounded-lg shadow-[2px_2px_0_#111111] flex gap-2">
+                <input
+                  type="text"
+                  value={newCustomRole}
+                  onChange={(e) => setNewCustomRole(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddCustomRole();
+                    }
+                  }}
+                  placeholder="Type another role title..."
+                  className="flex-1 px-3 py-1.5 text-xs font-mono bg-[#FAFAF5] border border-[#111111] rounded focus:outline-none"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={handleAddCustomRole}
+                  className="text-xs"
+                >
+                  + Add Role
+                </Button>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t-2 border-dashed border-[#111111]/20">
+                <Button
+                  type="button"
+                  variant="default"
+                  size="default"
+                  onClick={async () => {
+                    await handleSaveTargetRoles();
+                    setShowRolesModal(false);
+                  }}
+                  disabled={savingRoles}
+                  className="w-full sm:w-auto gap-2 font-marker text-sm"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Accept Selected ({targetRoles.length}) &amp; Save</span>
+                </Button>
+
+                <a
+                  href="/jobs?filter_target_roles=true"
+                  onClick={async () => {
+                    await handleSaveTargetRoles();
+                    setShowRolesModal(false);
+                  }}
+                  className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-[#111111] underline hover:text-emerald-700"
+                >
+                  <span>Start Displaying Matching Offers →</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Success / Alert Banner */}
         {success && (
           <div className="p-4 rounded-lg bg-[#FFEB00]/30 border-2 border-[#111111] shadow-[3px_3px_0_#111111] text-[#111111] font-mono text-xs font-bold flex items-center gap-2">
@@ -299,7 +507,7 @@ export default function ProfilePage() {
                 )}
                 <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-[120px_8px_100px_6px/8px_100px_6px_120px] bg-[#FFEB00] border-2 border-[#111111] shadow-[2px_2px_0_#111111] text-[#111111] text-xs font-mono font-bold uppercase hover:-translate-y-0.5 active:translate-y-0.5 transition-all">
                   <Upload className="h-3.5 w-3.5" />
-                  <span>{uploadingCV ? 'Parsing...' : 'Upload Master CV'}</span>
+                  <span>{uploadingCV ? 'Analyzing with AI...' : 'Upload Master CV'}</span>
                   <input
                     type="file"
                     accept=".pdf,.docx,.doc"
@@ -308,6 +516,107 @@ export default function ProfilePage() {
                     disabled={uploadingCV}
                   />
                 </label>
+              </div>
+            </div>
+
+            {/* Target Job Roles & AI Matching Titles Card */}
+            <div className="p-5 bg-[#FFFFFF] border-2 border-[#111111] shadow-[3px_3px_0_#111111] rounded-[15px_225px_15px_255px/255px_15px_225px_15px] space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h4 className="font-marker text-lg text-[#111111] flex items-center gap-2">
+                    <Target className="w-5 h-5 text-[#111111]" />
+                    <span>Target Job Roles for Autonomous Hunting ({targetRoles.length} Active)</span>
+                  </h4>
+                  <p className="font-hand text-sm text-[#6B6B66]">
+                    These accepted titles filter discovered offers, trigger crawler keywords, and tailor applications.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowRolesModal(true)}
+                  className="text-xs gap-1.5 shrink-0"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Review 10 AI Titles</span>
+                </Button>
+              </div>
+
+              {rolesSavedMessage && (
+                <div className="p-2.5 bg-[#FFEB00] border-2 border-[#111111] rounded-lg text-xs font-mono font-bold text-[#111111] flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-800" />
+                  <span>{rolesSavedMessage}</span>
+                </div>
+              )}
+
+              {/* Active Roles Chips */}
+              <div className="flex flex-wrap gap-2">
+                {targetRoles.map((role) => (
+                  <span
+                    key={role}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFEB00] border-2 border-[#111111] rounded-lg shadow-[2px_2px_0_#111111] text-xs font-mono font-bold text-[#111111] -rotate-1"
+                  >
+                    <span>{role}</span>
+                    <button
+                      type="button"
+                      onClick={() => toggleRole(role)}
+                      className="hover:text-red-700 focus:outline-none"
+                      title="Remove role"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+
+              {/* Add and Save row */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 border-t border-dashed border-[#111111]/20">
+                <div className="flex gap-2 flex-1 max-w-md">
+                  <input
+                    type="text"
+                    value={newCustomRole}
+                    onChange={(e) => setNewCustomRole(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddCustomRole();
+                      }
+                    }}
+                    placeholder="Type custom role title..."
+                    className="flex-1 bg-[#FAFAF5] border-2 border-[#111111] rounded-lg px-3 py-1.5 text-xs font-mono focus:outline-none"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleAddCustomRole}
+                    className="text-xs"
+                  >
+                    + Add
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={handleSaveTargetRoles}
+                    disabled={savingRoles}
+                    className="text-xs gap-1.5"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span>{savingRoles ? 'Saving...' : 'Save Accepted Roles'}</span>
+                  </Button>
+
+                  <a
+                    href="/jobs?filter_target_roles=true"
+                    className="inline-flex items-center gap-1 text-xs font-mono font-bold text-[#111111] underline hover:text-emerald-700 ml-2"
+                  >
+                    <span>Display Matching Offers →</span>
+                  </a>
+                </div>
               </div>
             </div>
 

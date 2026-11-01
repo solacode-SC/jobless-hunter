@@ -13,7 +13,7 @@ import {
 import { MainLayout } from '@/components/layout/main-layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getDocuments, getCandidateProfile } from '@/lib/api';
+import { getDocuments, getCandidateProfile, uploadCV } from '@/lib/api';
 import { Document, CandidateProfile } from '@/types';
 import { Tag } from '@/components/sketch/tag';
 
@@ -52,18 +52,10 @@ export default function CVManagerPage() {
     setUploading(true);
     setUploadSuccess(false);
 
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
-      const res = await fetch('http://localhost:9878/api/candidate/upload-cv', {
-        method: 'POST',
-        body: formData,
-      });
-      if (res.ok) {
-        setUploadSuccess(true);
-        await loadData();
-      }
+      const res = await uploadCV(file);
+      setUploadSuccess(true);
+      await loadData();
     } catch (err) {
       console.error(err);
     } finally {

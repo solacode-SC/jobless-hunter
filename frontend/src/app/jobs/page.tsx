@@ -11,13 +11,14 @@ import {
   ExternalLink,
   Bot,
   CheckCircle,
+  Target,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/main-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge, MatchScoreBadge } from '@/components/ui/status-badge';
-import { getJobs, evaluateJob, triggerDiscovery } from '@/lib/api';
+import { getJobs, evaluateJob, triggerDiscovery, getTargetRoles } from '@/lib/api';
 import { Job } from '@/types';
 import { Tag } from '@/components/sketch/tag';
 
@@ -27,8 +28,33 @@ export default function JobsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
+  const [targetRoles, setTargetRoles] = useState<string[]>([]);
+  const [activeRole, setActiveRole] = useState<string>('');
+  const [onlyTargetRoles, setOnlyTargetRoles] = useState<boolean>(false);
   const [evaluatingId, setEvaluatingId] = useState<string | null>(null);
   const [isDiscovering, setIsDiscovering] = useState(false);
+
+  useEffect(() => {
+    async function loadRoles() {
+      try {
+        const res = await getTargetRoles();
+        setTargetRoles(res.target_roles || []);
+      } catch (err) {
+        console.warn('Failed to load target roles:', err);
+      }
+    }
+    loadRoles();
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('filter_target_roles') === 'true') {
+        setOnlyTargetRoles(true);
+      }
+      if (params.get('target_role')) {
+        setActiveRole(params.get('target_role')!);
+      }
+    }
+  }, []);
 
   const fetchJobsList = async () => {
     setLoading(true);
@@ -37,6 +63,8 @@ export default function JobsPage() {
         search: search || undefined,
         status: statusFilter || undefined,
         source: sourceFilter || undefined,
+        target_role: activeRole || undefined,
+        filter_target_roles: onlyTargetRoles || undefined,
       });
       setJobs(res.items);
     } catch (e) {
@@ -48,7 +76,7 @@ export default function JobsPage() {
 
   useEffect(() => {
     fetchJobsList();
-  }, [statusFilter, sourceFilter]);
+  }, [statusFilter, sourceFilter, activeRole, onlyTargetRoles]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +98,8 @@ export default function JobsPage() {
   const handleRunDiscovery = async () => {
     setIsDiscovering(true);
     try {
-      await triggerDiscovery(search || 'Software Engineer');
+      const query = activeRole || search || (targetRoles.length > 0 ? targetRoles[0] : 'Software Engineer');
+      await triggerDiscovery(query);
       await fetchJobsList();
     } catch (e) {
       console.error(e);
@@ -87,6 +116,79 @@ export default function JobsPage() {
       isRefreshing={loading}
     >
       <div className="space-y-6 max-w-7xl mx-auto">
+        {/* Target Roles Filter Bar */}
+        {targetRoles.length > 0 && (
+          <div className="p-4 bg-[#FFFFFF] border-2 border-[#111111] shadow-[3px_3px_0_#111111] rounded-[15px_225px_15px_255px/255px_15px_225px_15px] space-y-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-[#111111]" />
+                <span className="font-marker text-sm text-[#111111]">
+                  Filter Offers by Accepted CV Target Titles ({targetRoles.length} Active)
+                </span>
+              </div>
+              <Link
+                href="/profile"
+                className="text-xs font-mono font-bold text-[#111111] underline hover:text-emerald-700"
+              >
+                Manage Target Roles in Profile →
+              </Link>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveRole('');
+                  setOnlyTargetRoles(false);
+                }}
+                className={`px-3 py-1 rounded-full text-xs font-mono font-bold border-2 border-[#111111] transition-all ${
+                  !activeRole && !onlyTargetRoles
+                    ? 'bg-[#111111] text-[#FFFFFF] shadow-[2px_2px_0_#FFEB00]'
+                    : 'bg-[#FAFAF5] text-[#111111] hover:bg-[#FFEB00]'
+                }`}
+              >
+                All Jobs ({jobs.length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveRole('');
+                  setOnlyTargetRoles(true);
+                }}
+                className={`px-3 py-1 rounded-full text-xs font-mono font-bold border-2 border-[#111111] transition-all ${
+                  onlyTargetRoles
+                    ? 'bg-[#FFEB00] text-[#111111] shadow-[2px_2px_0_#111111]'
+                    : 'bg-[#FAFAF5] text-[#111111] hover:bg-[#FFEB00]'
+                }`}
+              >
+                🎯 All Accepted CV Titles
+              </button>
+
+              {targetRoles.map((role) => {
+                const isSelected = activeRole === role;
+                return (
+                  <button
+                    type="button"
+                    key={role}
+                    onClick={() => {
+                      setOnlyTargetRoles(false);
+                      setActiveRole(isSelected ? '' : role);
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-mono font-bold border-2 border-[#111111] transition-all ${
+                      isSelected
+                        ? 'bg-[#FFEB00] text-[#111111] shadow-[2px_2px_0_#111111] -rotate-1'
+                        : 'bg-[#FFFFFF] text-[#111111] hover:bg-[#FAFAF5] shadow-[1px_1px_0_#111111]'
+                    }`}
+                  >
+                    {role}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Search and Filters Bar */}
         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
           <form onSubmit={handleSearchSubmit} className="flex-1 flex items-center gap-2">

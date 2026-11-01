@@ -143,12 +143,16 @@ async def update_profile(payload: CandidateUpdate, db: AsyncSession = Depends(ge
     return candidate
 
 
-@router.post("/upload-cv", response_model=CandidateResponse)
+class TargetRolesRequest(BaseModel):
+    target_roles: list[str]
+
+
+@router.post("/upload-cv")
 async def upload_original_cv(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
 ):
-    """Upload original CV (PDF or DOCX), parse text, and update candidate profile."""
+    """Upload original CV (PDF or DOCX), extract structured profile via AI, and suggest 10 matching titles."""
     candidate = await get_or_create_candidate(db)
 
     content = await file.read()
@@ -163,19 +167,120 @@ async def upload_original_cv(
     with open(file_path, "wb") as f:
         f.write(content)
 
-    # Parse CV text
+    # Parse and extract structured CV data using AI (DeepSeek / Gemini)
     try:
-        parsed_data = cv_parser.parse_cv_file(file.filename or "cv.pdf", content)
+        parsed_data = await cv_parser.parse_and_extract_cv(file.filename or "cv.pdf", content)
     except Exception as e:
-        logger.error("Failed to parse CV: %s", e)
-        parsed_data = {"error": str(e), "raw_text": ""}
+        logger.error("Failed to parse CV with AI: %s", e)
+        parsed_data = {"error": str(e), "raw_text": "", "suggested_job_titles": []}
+
+    # 1. Update candidate profile fields based on the uploaded CV
+    if parsed_data.get("name") and len(str(parsed_data["name"]).strip()) > 1:
+        candidate.name = str(parsed_data["name"]).strip()
+
+    if parsed_data.get("email") and "@" in str(parsed_data["email"]):
+        candidate.email = str(parsed_data["email"]).strip()
+
+    if parsed_data.get("phone"):
+        candidate.phone = str(parsed_data["phone"]).strip()
+
+    if parsed_data.get("professional_title"):
+        candidate.professional_title = str(parsed_data["professional_title"]).strip()
+
+    if parsed_data.get("summary"):
+        candidate.summary = str(parsed_data["summary"]).strip()
+
+    if parsed_data.get("skills") and isinstance(parsed_data["skills"], list):
+        candidate.skills = [s for s in parsed_data["skills"] if isinstance(s, str) and s.strip()]
+
+    if parsed_data.get("experience") and isinstance(parsed_data["experience"], list):
+        candidate.experience = parsed_data["experience"]
+
+    if parsed_data.get("education") and isinstance(parsed_data["education"], list):
+        candidate.education = parsed_data["education"]
+
+    if parsed_data.get("portfolio_url"):
+        candidate.portfolio_url = str(parsed_data["portfolio_url"]).strip()
+
+    if parsed_data.get("github_url"):
+        candidate.github_url = str(parsed_data["github_url"]).strip()
+
+    if parsed_data.get("linkedin_url"):
+        candidate.linkedin_url = str(parsed_data["linkedin_url"]).strip()
 
     candidate.original_cv_path = str(file_path)
-    candidate.cv_data = parsed_data
+
+    # 2. Store suggested titles & initialize target roles if empty
+    suggested_titles = parsed_data.get("suggested_job_titles") or []
+    prefs = dict(candidate.preferences or {})
+    prefs["suggested_job_titles"] = suggested_titles
+
+    # Default target roles if none set yet
+    if not prefs.get("target_roles") and suggested_titles:
+        prefs["target_roles"] = suggested_titles[:5]
+
+    candidate.preferences = prefs
+    flag_modified(candidate, "preferences")
+
+    candidate.cv_data = {
+        "filename": file.filename,
+        "char_count": len(parsed_data.get("raw_text", "")),
+        "word_count": len(parsed_data.get("raw_text", "").split()),
+        "parsed_at": datetime.now(timezone.utc).isoformat(),
+        "extracted_summary": parsed_data.get("summary"),
+    }
 
     await db.commit()
     await db.refresh(candidate)
-    return candidate
+
+    return {
+        "status": "success",
+        "message": "CV parsed and candidate profile updated successfully with 10 matching titles.",
+        "candidate": CandidateResponse.model_validate(candidate),
+        "suggested_job_titles": suggested_titles,
+        "active_target_roles": prefs.get("target_roles", []),
+        "original_cv_path": candidate.original_cv_path,
+    }
+
+
+@router.get("/target-roles")
+async def get_target_roles(db: AsyncSession = Depends(get_db)):
+    """Retrieve candidate's active target job roles and recent AI suggested titles."""
+    candidate = await get_or_create_candidate(db)
+    prefs = candidate.preferences or {}
+    return {
+        "status": "success",
+        "target_roles": prefs.get("target_roles", [
+            "Software Engineer",
+            "Full-Stack Developer",
+            "DevOps Engineer",
+            "Backend Engineer",
+        ]),
+        "suggested_job_titles": prefs.get("suggested_job_titles", []),
+    }
+
+
+@router.post("/target-roles")
+async def update_target_roles(
+    payload: TargetRolesRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Save user-selected target roles to filter offers and guide discovery."""
+    candidate = await get_or_create_candidate(db)
+    prefs = dict(candidate.preferences or {})
+    clean_roles = [r.strip() for r in payload.target_roles if r.strip()]
+    prefs["target_roles"] = clean_roles
+    candidate.preferences = prefs
+    flag_modified(candidate, "preferences")
+
+    await db.commit()
+    await db.refresh(candidate)
+
+    return {
+        "status": "success",
+        "message": f"Updated {len(clean_roles)} target roles successfully.",
+        "target_roles": clean_roles,
+    }
 
 
 # ── Related Files Management ─────────────────────────────────────────────────
