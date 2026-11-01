@@ -22,38 +22,43 @@ export function ActivityChart({ data }: ActivityChartProps) {
         <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="jobsGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
-              <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0} />
+              <stop offset="5%" stopColor="#FFEB00" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="#FFEB00" stopOpacity={0.05} />
             </linearGradient>
           </defs>
           <XAxis
             dataKey="date"
-            stroke="#64748b"
-            fontSize={12}
+            stroke="#111111"
+            fontFamily="Space Mono, monospace"
+            fontSize={11}
             tickLine={false}
-            axisLine={false}
+            axisLine={{ stroke: '#111111', strokeWidth: 1.5, strokeDasharray: '3 3' }}
           />
           <YAxis
-            stroke="#64748b"
-            fontSize={12}
+            stroke="#111111"
+            fontFamily="Space Mono, monospace"
+            fontSize={11}
             tickLine={false}
-            axisLine={false}
+            axisLine={{ stroke: '#111111', strokeWidth: 1.5, strokeDasharray: '3 3' }}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#0f172a',
-              borderColor: '#334155',
+              backgroundColor: '#FFFFFF',
+              borderColor: '#111111',
+              borderWidth: '2px',
               borderRadius: '8px',
+              boxShadow: '3px 3px 0 #111111',
+              fontFamily: 'Space Mono, monospace',
               fontSize: '12px',
-              color: '#f8fafc',
+              color: '#111111',
             }}
           />
           <Area
             type="monotone"
             dataKey="jobs_discovered"
             name="Discovered Jobs"
-            stroke="#6366f1"
-            strokeWidth={2}
+            stroke="#111111"
+            strokeWidth={2.5}
             fillOpacity={1}
             fill="url(#jobsGradient)"
           />
@@ -62,4 +67,3 @@ export function ActivityChart({ data }: ActivityChartProps) {
     </div>
   );
 }
-

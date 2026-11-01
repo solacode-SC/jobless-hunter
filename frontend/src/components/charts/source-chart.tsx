@@ -16,7 +16,7 @@ interface SourceChartProps {
   data: SourceCount[];
 }
 
-const COLORS = ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+const SKETCH_COLORS = ['#FFEB00', '#BAE6FD', '#BBF7D0', '#FECDD3', '#DDD6FE'];
 
 export function SourceChart({ data }: SourceChartProps) {
   const formattedData = data.map((d) => ({
@@ -30,29 +30,34 @@ export function SourceChart({ data }: SourceChartProps) {
         <BarChart data={formattedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <XAxis
             dataKey="name"
-            stroke="#64748b"
-            fontSize={11}
+            stroke="#111111"
+            fontFamily="Space Mono, monospace"
+            fontSize={10}
             tickLine={false}
-            axisLine={false}
+            axisLine={{ stroke: '#111111', strokeWidth: 1.5, strokeDasharray: '3 3' }}
           />
           <YAxis
-            stroke="#64748b"
-            fontSize={12}
+            stroke="#111111"
+            fontFamily="Space Mono, monospace"
+            fontSize={11}
             tickLine={false}
-            axisLine={false}
+            axisLine={{ stroke: '#111111', strokeWidth: 1.5, strokeDasharray: '3 3' }}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#0f172a',
-              borderColor: '#334155',
+              backgroundColor: '#FFFFFF',
+              borderColor: '#111111',
+              borderWidth: '2px',
               borderRadius: '8px',
+              boxShadow: '3px 3px 0 #111111',
+              fontFamily: 'Space Mono, monospace',
               fontSize: '12px',
-              color: '#f8fafc',
+              color: '#111111',
             }}
           />
-          <Bar dataKey="count" name="Jobs Found" radius={[4, 4, 0, 0]}>
+          <Bar dataKey="count" name="Jobs Found" stroke="#111111" strokeWidth={2}>
             {formattedData.map((_, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell key={`cell-${index}`} fill={SKETCH_COLORS[index % SKETCH_COLORS.length]} />
             ))}
           </Bar>
         </BarChart>
@@ -60,4 +65,3 @@ export function SourceChart({ data }: SourceChartProps) {
     </div>
   );
 }
-

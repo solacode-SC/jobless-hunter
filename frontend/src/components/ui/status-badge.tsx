@@ -48,23 +48,28 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
 
 export function MatchScoreBadge({ score }: { score: number | null }) {
   if (score === null || score === undefined) {
-    return <span className="text-xs text-slate-500">Unscored</span>;
+    return (
+      <span className="font-mono text-xs px-2 py-0.5 rounded-full border border-dashed border-[#111111]/40 text-[#6B6B66]">
+        Unscored
+      </span>
+    );
   }
 
-  let colorClasses = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+  let colorClasses = 'bg-[#FECDD3] text-[#111111]';
   if (score >= 85) {
-    colorClasses = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+    colorClasses = 'bg-[#FFEB00] text-[#111111]';
   } else if (score >= 70) {
-    colorClasses = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+    colorClasses = 'bg-[#BBF7D0] text-[#111111]';
   } else if (score >= 55) {
-    colorClasses = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+    colorClasses = 'bg-[#FEF08A] text-[#111111]';
   }
 
   return (
-    <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${colorClasses}`}>
+    <div
+      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border-2 border-[#111111] shadow-[1.5px_1.5px_0_#111111] -rotate-1 ${colorClasses}`}
+    >
       <span>{score}%</span>
-      <span className="text-[10px] opacity-75">fit</span>
+      <span className="text-[10px] opacity-80 uppercase">fit</span>
     </div>
   );
 }
-

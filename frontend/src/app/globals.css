@@ -1,14 +1,145 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Patrick+Hand&family=Permanent+Marker&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #020617;
-  --foreground: #f8fafc;
+  --paper: #FAFAF5;
+  --white: #FFFFFF;
+  --ink: #111111;
+  --highlight: #FFEB00;
+  --muted: #6B6B66;
+  --border-sketch: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  --border-sketch-reverse: 15px 225px 15px 255px / 255px 15px 225px 15px;
+  --border-sketch-sm: 220px 12px 200px 12px / 12px 200px 12px 220px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
+}
+
+/* Focus states: a 3px yellow outline with an ink offset */
+:focus-visible {
+  outline: 3px solid var(--highlight);
+  outline-offset: 2px;
+}
+
+/* Typography Utility Classes */
+.font-marker {
+  font-family: 'Permanent Marker', cursive, sans-serif;
+}
+
+.font-hand {
+  font-family: 'Patrick Hand', cursive, sans-serif;
+}
+
+.font-body {
+  font-family: 'DM Sans', sans-serif;
+}
+
+.font-mono {
+  font-family: 'Space Mono', monospace;
+}
+
+/* Backgrounds */
+.bg-paper-grid {
+  background-color: var(--paper);
+  background-image: radial-gradient(#d9d9d2 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.bg-paper-plain {
+  background-color: var(--paper);
+}
+
+.bg-white-section {
+  background-color: var(--white);
+}
+
+/* Sketch borders & shadows */
+.border-sketch {
+  border: 2.5px solid var(--ink);
+  border-radius: var(--border-sketch);
+}
+
+.border-sketch-reverse {
+  border: 2.5px solid var(--ink);
+  border-radius: var(--border-sketch-reverse);
+}
+
+.border-sketch-sm {
+  border: 2px solid var(--ink);
+  border-radius: var(--border-sketch-sm);
+}
+
+.shadow-hard {
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.shadow-hard-sm {
+  box-shadow: 2.5px 2.5px 0 var(--ink);
+}
+
+.shadow-hard-lg {
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+/* Section divider */
+.dashed-divider {
+  border-top: 1.5px dashed #999999;
+}
+
+/* Tape decoration for polaroids */
+.polaroid-tape {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1deg);
+  width: 70px;
+  height: 22px;
+  background-color: rgba(255, 235, 0, 0.45);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(1px);
+  z-index: 10;
+  border-radius: 2px;
+}
+
+/* Drawing animations */
+@keyframes drawStroke {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-draw {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawStroke 1.2s ease forwards;
+}
+
+/* Gentle float loop for Hero Polaroid */
+@keyframes floatPolaroid {
+  0%, 100% {
+    transform: translateY(0px) rotate(2deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1.2deg);
+  }
+}
+
+.animate-float-polaroid {
+  animation: floatPolaroid 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-polaroid {
+    animation: none !important;
+  }
+  .animate-draw {
+    stroke-dashoffset: 0 !important;
+    animation: none !important;
+  }
 }

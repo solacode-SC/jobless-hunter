@@ -20,7 +20,7 @@ export function MainLayout({
   isRefreshing,
 }: MainLayoutProps) {
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
+    <div className="flex min-h-screen bg-paper-grid text-[#111111] antialiased selection:bg-[#FFEB00] selection:text-[#111111]">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Header
@@ -29,9 +29,8 @@ export function MainLayout({
           onRefresh={onRefresh}
           isRefreshing={isRefreshing}
         />
-        <main className="flex-1 p-8 overflow-y-auto">{children}</main>
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto">{children}</main>
       </div>
     </div>
   );
 }
-
