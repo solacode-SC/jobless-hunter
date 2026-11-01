@@ -1,0 +1,107 @@
+{
+  "name": "JobHunter - 05 - Email Monitoring",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "poll-emails",
+      "name": "Poll Email Every 15m",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:8000/api/applications",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "applied"
+            }
+          ]
+        }
+      },
+      "id": "get-active-apps",
+      "name": "Get Applied Applications",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "items"
+      },
+      "id": "split-applied-apps",
+      "name": "Split Applications",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.recruiter_email }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "has-recruiter-contact",
+      "name": "Has Recruiter Contact?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [860, 300]
+    }
+  ],
+  "connections": {
+    "Poll Email Every 15m": {
+      "main": [
+        [
+          {
+            "node": "Get Applied Applications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Applied Applications": {
+      "main": [
+        [
+          {
+            "node": "Split Applications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Applications": {
+      "main": [
+        [
+          {
+            "node": "Has Recruiter Contact?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "name": "JobHunter - 06 - Daily Summary Digest",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "cron-daily-8am",
+      "name": "Daily at 8:00 AM UTC",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:8000/api/analytics/overview"
+      },
+      "id": "get-overview-stats",
+      "name": "Fetch Overview KPIs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [420, 240]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:8000/api/jobs/stats"
+      },
+      "id": "get-job-stats",
+      "name": "Fetch Job Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [420, 380]
+    },
+    {
+      "parameters": {
+        "jsCode": "const overview = $('Fetch Overview KPIs').first().json;\nconst jobStats = $('Fetch Job Stats').first().json;\n\nconst summaryText = `\n# 🎯 JobHunter AI — Daily Summary Digest\n**Date:** ${new Date().toISOString().split('T')[0]}\n\n## Key Metrics\n- **Total Discovered Jobs:** ${overview.total_jobs}\n- **Discovered Today:** ${jobStats.discovered_today}\n- **Qualified Matches:** ${overview.qualified_jobs}\n- **Applications Sent:** ${overview.applications_submitted}\n- **Pending Your Approval:** ${overview.pending_approvals}\n- **Interview Invitations:** ${overview.interview_invitations}\n- **Average Match Score:** ${overview.average_match_score}%\n- **Conversion Rate:** ${overview.conversion_rate}%\n\nAccess Dashboard: https://jobs.solaymanbuilds.com\n`;\n\nreturn [{ json: { summary: summaryText, timestamp: new Date().toISOString() } }];"
+      },
+      "id": "format-daily-markdown",
+      "name": "Format Daily Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Daily at 8:00 AM UTC": {
+      "main": [
+        [
+          {
+            "node": "Fetch Overview KPIs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Job Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Overview KPIs": {
+      "main": [
+        [
+          {
+            "node": "Format Daily Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

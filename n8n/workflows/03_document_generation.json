@@ -1,0 +1,113 @@
+{
+  "name": "JobHunter - 03 - Document Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-documents",
+        "responseMode": "onReceived"
+      },
+      "id": "webhook-doc-gen",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:8000/api/candidate/profile"
+      },
+      "id": "get-candidate-profile",
+      "name": "Get Candidate Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/documents/generate-cv",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"candidate_id\": \"{{ $('Get Candidate Profile').item.json.id }}\",\n  \"job_id\": \"{{ $('Webhook Trigger').item.json.body.job_id }}\",\n  \"language\": \"en\"\n}"
+      },
+      "id": "gen-cv-api",
+      "name": "Generate Tailored CV",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [660, 240]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/documents/generate-cover-letter",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"candidate_id\": \"{{ $('Get Candidate Profile').item.json.id }}\",\n  \"job_id\": \"{{ $('Webhook Trigger').item.json.body.job_id }}\",\n  \"language\": \"en\"\n}"
+      },
+      "id": "gen-cover-api",
+      "name": "Generate Cover Letter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [660, 380]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/applications",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"candidate_id\": \"{{ $('Get Candidate Profile').item.json.id }}\",\n  \"job_id\": \"{{ $('Webhook Trigger').item.json.body.job_id }}\",\n  \"notes\": \"AI-tailored CV and Cover letter generated. Awaiting user review/approval.\"\n}"
+      },
+      "id": "create-application",
+      "name": "Create Application Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [920, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Candidate Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Candidate Profile": {
+      "main": [
+        [
+          {
+            "node": "Generate Tailored CV",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Cover Letter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Tailored CV": {
+      "main": [
+        [
+          {
+            "node": "Create Application Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

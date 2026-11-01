@@ -1,0 +1,69 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/build/
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment and secrets
+.env
+*.env.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
+
+# Logs and persistent runtime
+logs/*
+!logs/.gitkeep
+uploads/*
+!uploads/.gitkeep
+!uploads/cvs/.gitkeep
+!uploads/generated/.gitkeep
+!uploads/covers/.gitkeep
+backups/*
+!backups/.gitkeep
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker volume mounts / temp
+*.sqlite3
+postgres_data/
+redis_data/
+n8n_data/

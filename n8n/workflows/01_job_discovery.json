@@ -1,0 +1,121 @@
+{
+  "name": "JobHunter - 01 - Job Discovery Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger-01",
+      "name": "Schedule Trigger (Every 30 mins)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/discovery/run",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "Software Engineer"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "http-trigger-discovery",
+      "name": "Trigger Discovery API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.stats.new_jobs }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "if-new-jobs",
+      "name": "If New Jobs Discovered",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://n8n:5678/webhook/trigger-evaluation",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "new_jobs_count",
+              "value": "={{ $json.stats.new_jobs }}"
+            }
+          ]
+        }
+      },
+      "id": "trigger-workflow-02",
+      "name": "Trigger AI Evaluation Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 240]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger (Every 30 mins)": {
+      "main": [
+        [
+          {
+            "node": "Trigger Discovery API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Discovery API": {
+      "main": [
+        [
+          {
+            "node": "If New Jobs Discovered",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If New Jobs Discovered": {
+      "main": [
+        [
+          {
+            "node": "Trigger AI Evaluation Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

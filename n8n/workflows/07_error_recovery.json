@@ -1,0 +1,62 @@
+{
+  "name": "JobHunter - 07 - Error Recovery & Alerting",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const execution = $json.execution;\nconst workflow = $json.workflow;\n\nreturn [{\n  json: {\n    workflow_name: workflow.name,\n    workflow_id: workflow.id,\n    execution_id: execution.id,\n    error_message: execution.error.message,\n    error_stack: execution.error.stack,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "extract-error-details",
+      "name": "Extract Error Details",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/health",
+        "options": {}
+      },
+      "id": "check-backend-health",
+      "name": "Verify Backend Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [660, 300]
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Error Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Error Details": {
+      "main": [
+        [
+          {
+            "node": "Verify Backend Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

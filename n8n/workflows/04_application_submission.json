@@ -1,0 +1,154 @@
+{
+  "name": "JobHunter - 04 - Application Submission",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule-submissions",
+      "name": "Check Queue Hourly",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:8000/api/applications",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "documents_ready"
+            }
+          ]
+        }
+      },
+      "id": "get-approved-apps",
+      "name": "Get Approved Applications",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "items"
+      },
+      "id": "split-apps",
+      "name": "Split Applications",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.submission_method }}",
+              "operation": "equal",
+              "value2": "api"
+            }
+          ]
+        }
+      },
+      "id": "check-method",
+      "name": "Is Automated API Submission?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=http://backend:8000/api/applications/{{ $json.id }}/status",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"status\": \"applied\",\n  \"notes\": \"Submitted automatically via verified API connector\"\n}"
+      },
+      "id": "mark-applied",
+      "name": "Mark Applied",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1100, 240]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=http://backend:8000/api/applications/{{ $json.id }}/status",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"status\": \"awaiting_approval\",\n  \"notes\": \"Manual or web portal application requires user submission/confirmation\"\n}"
+      },
+      "id": "mark-manual-review",
+      "name": "Queue for Manual Submission",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1100, 380]
+    }
+  ],
+  "connections": {
+    "Check Queue Hourly": {
+      "main": [
+        [
+          {
+            "node": "Get Approved Applications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Approved Applications": {
+      "main": [
+        [
+          {
+            "node": "Split Applications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Applications": {
+      "main": [
+        [
+          {
+            "node": "Is Automated API Submission?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Automated API Submission?": {
+      "main": [
+        [
+          {
+            "node": "Mark Applied",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Queue for Manual Submission",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

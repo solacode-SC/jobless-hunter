@@ -1,0 +1,167 @@
+{
+  "name": "JobHunter - 02 - AI Evaluation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "trigger-evaluation",
+        "responseMode": "onReceived"
+      },
+      "id": "webhook-eval",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:8000/api/jobs",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "discovered"
+            },
+            {
+              "name": "page_size",
+              "value": "25"
+            }
+          ]
+        }
+      },
+      "id": "get-unevaluated-jobs",
+      "name": "Get Discovered Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "items"
+      },
+      "id": "split-jobs",
+      "name": "Split Jobs List",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [620, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://backend:8000/api/jobs/{{ $json.id }}/evaluate",
+        "options": {
+          "timeout": 45000
+        }
+      },
+      "id": "evaluate-job-api",
+      "name": "Evaluate Fit with AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [840, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.match_score }}",
+              "operation": "largerEqual",
+              "value2": 70
+            }
+          ]
+        }
+      },
+      "id": "if-qualified",
+      "name": "If Match Score >= 70",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1060, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://n8n:5678/webhook/generate-documents",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "job_id",
+              "value": "={{ $json.job_id }}"
+            },
+            {
+              "name": "score",
+              "value": "={{ $json.match_score }}"
+            }
+          ]
+        }
+      },
+      "id": "trigger-doc-gen",
+      "name": "Trigger Doc Generation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1280, 240]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Discovered Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Discovered Jobs": {
+      "main": [
+        [
+          {
+            "node": "Split Jobs List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Jobs List": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Fit with AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Fit with AI": {
+      "main": [
+        [
+          {
+            "node": "If Match Score >= 70",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Match Score >= 70": {
+      "main": [
+        [
+          {
+            "node": "Trigger Doc Generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
