@@ -1,5 +1,5 @@
 # ==============================================================================
-# JobHunter AI — Master Automation Makefile
+# Jobless Hunter — Master Automation Makefile
 # Target Port Range: 9876–9964
 # ==============================================================================
 
@@ -10,7 +10,7 @@ COMPOSE ?= docker compose
 .PHONY: help
 help:
 	@echo "=============================================================================="
-	@echo " 🎯 JobHunter AI — Development & Production CLI Commands"
+	@echo " 🎯 Jobless Hunter — Development & Production CLI Commands"
 	@echo " Target Port Allocation: 9876–9964 (Bound to 127.0.0.1)"
 	@echo "=============================================================================="
 	@echo ""
@@ -112,13 +112,13 @@ check-ports:
 # ── Docker Lifecycle ─────────────────────────────────────────────────────────
 .PHONY: up down restart build ps logs
 up: init
-	@echo "==> Starting JobHunter AI Docker cluster..."
+	@echo "==> Starting Jobless Hunter Docker cluster..."
 	$(COMPOSE) up -d
 	@echo "[✓] Containers launched."
 	@$(MAKE) ps
 
 down:
-	@echo "==> Stopping JobHunter AI Docker cluster..."
+	@echo "==> Stopping Jobless Hunter Docker cluster..."
 	$(COMPOSE) down
 
 restart:
