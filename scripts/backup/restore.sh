@@ -61,3 +61,4 @@ if [ -f "${TEMP_DIR}/n8n_data.tar.gz" ]; then
 fi
 
 echo "Restore process finished."
+

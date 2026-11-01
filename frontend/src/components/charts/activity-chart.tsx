@@ -62,3 +62,4 @@ export function ActivityChart({ data }: ActivityChartProps) {
     </div>
   );
 }
+

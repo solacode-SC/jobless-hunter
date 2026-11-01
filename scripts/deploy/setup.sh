@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ===========================================
-# JobHunter AI — Deployment Script
+# Jobless Hunter — Deployment Script
 # ===========================================
 # Full deployment: env setup, build, migrate, nginx, SSL
 set -euo pipefail

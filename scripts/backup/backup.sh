@@ -59,3 +59,4 @@ echo "Pruning backups older than ${RETENTION_DAYS} days..."
 find "${BACKUP_DIR}" -type f -name "jobhunter_backup_*.tar.gz" -mtime +"${RETENTION_DAYS}" -exec rm -f {} +
 
 echo "[$(date -u +"%Y-%m-%dT%H:%M:%SZ")] Backup completed successfully."
+

@@ -61,3 +61,4 @@ async def scrape_page(request: ScrapeRequest):
     except Exception as exc:
         logger.error(f"Error scraping {request.url}: {exc}")
         raise HTTPException(status_code=500, detail=str(exc))
+

@@ -204,3 +204,4 @@ certbot:
 		-d jobs.solaymanbuilds.com \
 		-d automation.solaymanbuilds.com
 	@echo "[✓] Certbot certificates generated. Ensure paths are uncommented in nginx/conf.d/jobhunter.conf."
+

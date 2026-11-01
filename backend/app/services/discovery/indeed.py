@@ -63,3 +63,4 @@ class IndeedConnector(BaseConnector):
             logger.warning("Indeed RSS discovery error: %s", e)
 
         return results
+

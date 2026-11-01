@@ -36,3 +36,4 @@ class BaseConnector(abc.ABC):
     async def discover(self, query: str = "Software Engineer", location: str | None = None, limit: int = 50) -> list[DiscoveredJob]:
         """Fetch jobs matching the query parameters."""
         pass
+

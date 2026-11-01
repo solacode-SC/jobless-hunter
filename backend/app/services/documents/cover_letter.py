@@ -58,3 +58,4 @@ Structure:
 
 
 cover_letter_generator = CoverLetterGenerator()
+

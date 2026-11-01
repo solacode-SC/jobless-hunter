@@ -67,3 +67,4 @@ export function MatchScoreBadge({ score }: { score: number | null }) {
     </div>
   );
 }
+

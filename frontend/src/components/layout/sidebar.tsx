@@ -41,7 +41,7 @@ export function Sidebar() {
           <Zap className="h-5 w-5 text-white" />
         </div>
         <div>
-          <span className="font-bold text-slate-100 text-base tracking-tight block">JobHunter AI</span>
+          <span className="font-bold text-slate-100 text-base tracking-tight block">Jobless Hunter</span>
           <span className="text-[10px] text-indigo-400 font-medium tracking-wide uppercase">24/7 Autonomous</span>
         </div>
       </div>
@@ -84,3 +84,4 @@ export function Sidebar() {
     </aside>
   );
 }
+

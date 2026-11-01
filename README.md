@@ -1,6 +1,6 @@
-# 🎯 JobHunter AI — 24/7 Autonomous Job Application Agent
+# 🎯 Jobless Hunter — 24/7 Autonomous AI Job Application Agent
 
-JobHunter AI is an enterprise-grade, self-hosted, autonomous job discovery, matching, and application agent designed for **Solayman El Mouden**. It runs 24/7 on Ubuntu 24.04 LTS (Contabo VPS), continuously discovering relevant software engineering and DevOps positions, evaluating fit against verified credentials, generating tailored application materials, and tracking recruiter responses.
+Jobless Hunter is an enterprise-grade, self-hosted, autonomous job discovery, matching, and application agent designed for **Solayman El Mouden**. It runs 24/7 on Ubuntu 24.04 LTS (Contabo VPS), continuously discovering relevant software engineering and DevOps positions, evaluating fit against verified credentials using **DeepSeek AI and Google Gemini with automatic failover**, generating tailored application materials, and tracking recruiter responses.
 
 ---
 
@@ -84,3 +84,4 @@ The script will:
 - **JWT tokens** with configurable expiration.
 - Database and Redis published **only to localhost (`127.0.0.1`)**.
 - Reverse proxy hardened with **HSTS, CSP, X-Frame-Options, and TLS 1.2/1.3**.
+

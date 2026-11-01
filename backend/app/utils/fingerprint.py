@@ -54,3 +54,4 @@ def generate_job_fingerprint(title: str, company: str, location: str | None = No
         raw_key += f"::{norm_url}"
 
     return hashlib.sha256(raw_key.encode("utf-8")).hexdigest()
+

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# JobHunter AI — Service Health & Port Verification Script
+# Jobless Hunter — Service Health & Port Verification Script
 # ==============================================================================
 set -euo pipefail
 
@@ -20,7 +20,7 @@ REDIS_PORT="${REDIS_PORT_EXTERNAL:-9880}"
 BROWSER_PORT="${BROWSER_PORT:-9881}"
 
 echo "=========================================="
-echo " JobHunter AI — Service Health Checks"
+echo " Jobless Hunter — Service Health Checks"
 echo " Target Port Range: 9876 - 9964"
 echo "=========================================="
 
@@ -62,9 +62,10 @@ check_port_listening "Redis 7" "${REDIS_PORT}"
 
 echo "------------------------------------------"
 if [ ${FAILED} -eq 0 ]; then
-    echo -e "\e[32mAll JobHunter AI services are healthy and running within 9876-9964!\e[0m"
+    echo -e "\e[32mAll Jobless Hunter services are healthy and running within 9876-9964!\e[0m"
     exit 0
 else
     echo -e "\e[31m${FAILED} service(s) failed health inspection.\e[0m"
     exit 1
 fi
+

@@ -1,4 +1,4 @@
-"""JobHunter AI FastAPI Application."""
+"""Jobless Hunter FastAPI Application."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.core.database import engine, Base
 from app.core.redis import init_redis, close_redis
-from app.api.routes import auth, jobs, applications, documents, candidates, discovery, analytics, health
+from app.api.routes import auth, jobs, applications, documents, candidates, discovery, analytics, health, ai
 from app.models.candidate import CandidateProfile
 from app.api.routes.candidates import get_or_create_candidate
 from app.core.database import async_session_factory
@@ -21,13 +21,13 @@ logging.basicConfig(
     level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
-logger = logging.getLogger("jobhunter")
+logger = logging.getLogger("jobless-hunter")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application startup and shutdown lifespan events."""
-    logger.info("Initializing JobHunter AI backend...")
+    logger.info("Initializing Jobless Hunter backend...")
 
     # Ensure tables exist
     async with engine.begin() as conn:
@@ -40,10 +40,10 @@ async def lifespan(app: FastAPI):
     async with async_session_factory() as session:
         await get_or_create_candidate(session)
 
-    logger.info("JobHunter AI backend initialization complete.")
+    logger.info("Jobless Hunter backend initialization complete.")
     yield
 
-    logger.info("Shutting down JobHunter AI backend...")
+    logger.info("Shutting down Jobless Hunter backend...")
     await close_redis()
     await engine.dispose()
 
@@ -75,6 +75,7 @@ app.include_router(documents.router, prefix="/api")
 app.include_router(candidates.router, prefix="/api")
 app.include_router(discovery.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
+app.include_router(ai.router, prefix="/api")
 app.include_router(health.router, prefix="/api")
 
 
@@ -86,3 +87,4 @@ async def root():
         "status": "online",
         "docs": "/docs",
     }
+

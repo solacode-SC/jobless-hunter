@@ -252,3 +252,4 @@ async def update_document(
     await db.commit()
     await db.refresh(doc)
     return doc
+

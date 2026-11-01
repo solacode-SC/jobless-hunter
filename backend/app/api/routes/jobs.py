@@ -183,3 +183,4 @@ async def trigger_discovery(
         sources=sources,
     )
     return {"message": "Job discovery completed", "stats": stats}
+

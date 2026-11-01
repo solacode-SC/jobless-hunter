@@ -45,3 +45,4 @@ async def health_check(db: AsyncSession = Depends(get_db)):
             "disk_free_gb": free_gb,
         }
     }
+

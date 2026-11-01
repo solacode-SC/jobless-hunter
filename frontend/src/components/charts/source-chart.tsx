@@ -60,3 +60,4 @@ export function SourceChart({ data }: SourceChartProps) {
     </div>
   );
 }
+

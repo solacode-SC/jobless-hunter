@@ -23,3 +23,4 @@ def test_generate_job_fingerprint_deterministic():
     fp2 = generate_job_fingerprint("software engineer ", " google", "remote", "https://google.com/jobs/1")
     assert fp1 == fp2
     assert len(fp1) == 64
+

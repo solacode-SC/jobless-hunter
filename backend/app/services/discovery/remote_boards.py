@@ -88,3 +88,4 @@ class RemoteBoardsConnector(BaseConnector):
                 logger.warning("Error querying Arbeitnow API: %s", e)
 
         return results
+

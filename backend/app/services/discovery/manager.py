@@ -98,3 +98,4 @@ class DiscoveryManager:
             "new_jobs": new_jobs_count,
             "duplicates": duplicates_count,
         }
+

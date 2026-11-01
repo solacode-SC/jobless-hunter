@@ -1,4 +1,4 @@
-# JobHunter AI — Troubleshooting & Operations Guide
+# Jobless Hunter — Troubleshooting & Operations Guide
 
 ## 1. Port Conflict Diagnostics
 All services MUST operate strictly in the range `9876–9964`.
@@ -67,3 +67,4 @@ Then uncomment the SSL certificate lines in `/etc/nginx/conf.d/jobhunter.conf` a
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
 ```
+

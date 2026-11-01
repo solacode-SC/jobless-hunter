@@ -66,3 +66,4 @@ Requirements:
 
 
 cv_generator = CVGenerator()
+

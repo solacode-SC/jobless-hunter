@@ -50,3 +50,4 @@ class GoogleJobsConnector(BaseConnector):
         # Fallback public search integration
         logger.info("SerpAPI key not configured; skipping direct Google Jobs or returning empty.")
         return results
+

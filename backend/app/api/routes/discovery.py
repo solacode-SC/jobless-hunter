@@ -66,3 +66,4 @@ async def run_discovery_cycle(
         sources=sources,
     )
     return {"status": "completed", "stats": stats}
+

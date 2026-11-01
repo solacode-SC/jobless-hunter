@@ -34,3 +34,4 @@ def test_detect_general_update():
     )
     assert res["classification"] == "general"
     assert res["action_required"] is False
+

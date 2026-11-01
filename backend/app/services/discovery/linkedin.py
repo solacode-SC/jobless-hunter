@@ -63,3 +63,4 @@ class LinkedInConnector(BaseConnector):
             logger.warning("LinkedIn public discovery error: %s", e)
 
         return results
+

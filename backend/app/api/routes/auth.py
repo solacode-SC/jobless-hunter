@@ -69,3 +69,4 @@ async def login(
 async def get_current_user_profile(user: User = Depends(get_current_user)):
     """Return the profile of the authenticated user."""
     return user
+

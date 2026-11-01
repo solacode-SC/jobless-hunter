@@ -185,3 +185,4 @@ async def approve_application(app_id: UUID, db: AsyncSession = Depends(get_db)):
     await db.commit()
     await db.refresh(app)
     return app
+

@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     )
 
     # ── App ──────────────────────────────────────────────────────────────
-    APP_NAME: str = "JobHunter AI"
+    APP_NAME: str = "Jobless Hunter"
     APP_VERSION: str = "1.0.0"
     APP_ENV: Literal["development", "staging", "production"] = "development"
     DEBUG: bool = True
@@ -47,7 +47,23 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
-    # ── AI / LLM ─────────────────────────────────────────────────────────
+    # ── AI / LLM Multi-Provider (DeepSeek, Gemini, OpenAI) ─────────────
+    AI_PROVIDER: str = "auto"  # "auto", "deepseek", "gemini", "openai"
+    AI_API_KEY: str = ""
+    AI_BASE_URL: str = ""
+    AI_MODEL: str = ""
+
+    # DeepSeek AI
+    DEEPSEEK_API_KEY: str = ""
+    DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
+    DEEPSEEK_MODEL: str = "deepseek-chat"
+
+    # Google Gemini
+    GEMINI_API_KEY: str = ""
+    GEMINI_BASE_URL: str = "https://generativelanguage.googleapis.com/v1beta/openai"
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+
+    # OpenAI
     OPENAI_API_KEY: str = ""
     OPENAI_BASE_URL: str = "https://api.openai.com/v1"
     OPENAI_MODEL: str = "gpt-4o"

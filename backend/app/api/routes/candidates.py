@@ -131,3 +131,4 @@ async def upload_original_cv(
     await db.commit()
     await db.refresh(candidate)
     return candidate
+
