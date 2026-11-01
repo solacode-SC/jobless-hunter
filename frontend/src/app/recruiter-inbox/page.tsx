@@ -5,7 +5,7 @@ import { Mail, Calendar, CheckCircle2, AlertCircle, Clock, Send, Sparkles } from
 import { MainLayout } from '@/components/layout/main-layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Tag } from '@/components/sketch/tag';
 
 interface RecruiterMessage {
   id: string;
@@ -48,75 +48,73 @@ export default function RecruiterInboxPage() {
   return (
     <MainLayout
       title="Recruiter Communications Inbox"
-      description="Gmail OAuth integration detecting interview requests and recruiter updates."
+      description="Authorized email monitoring detecting interview requests & updates for Solayman El Mouden."
     >
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Thread List */}
           <div className="space-y-3">
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <h4 className="font-marker text-base text-[#111111]">
               Recruiter Messages ({messages.length})
             </h4>
             {messages.map((msg) => (
-              <Card
+              <div
                 key={msg.id}
                 onClick={() => setSelectedMessage(msg)}
-                className={`border-slate-800/80 bg-slate-900/40 cursor-pointer p-4 transition-all hover:border-slate-700 ${
-                  selectedMessage?.id === msg.id ? 'border-indigo-500/50 bg-indigo-950/10' : ''
+                className={`bg-[#FFFFFF] border-2 border-[#111111] shadow-[2.5px_2.5px_0_#111111] rounded-lg cursor-pointer p-4 transition-all hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#111111] ${
+                  selectedMessage?.id === msg.id ? 'bg-[#FFEB00]/25 -rotate-1 border-[2.5px]' : ''
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-xs text-slate-200">{msg.company}</span>
-                  {msg.type === 'interview' ? (
-                    <Badge variant="success" className="text-[10px]">Interview</Badge>
-                  ) : (
-                    <Badge variant="secondary" className="text-[10px]">Update</Badge>
-                  )}
+                  <span className="font-marker text-sm text-[#111111]">{msg.company}</span>
+                  <Tag variant={msg.type === 'interview' ? 'yellow' : 'paper'}>
+                    {msg.type}
+                  </Tag>
                 </div>
-                <p className="text-xs font-medium text-slate-300 mt-1 truncate">{msg.subject}</p>
-                <div className="flex items-center justify-between text-[11px] text-slate-500 mt-2">
+                <p className="font-hand text-base font-bold text-[#111111] mt-1 truncate">{msg.subject}</p>
+                <div className="flex items-center justify-between text-xs font-mono text-[#6B6B66] mt-2">
                   <span>{msg.sender}</span>
                   <span>{msg.received_at}</span>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
 
           {/* Email View and Reply Generator */}
           <div className="lg:col-span-2">
-            <Card className="border-slate-800 bg-slate-900/40 h-full flex flex-col">
-              <CardHeader className="border-b border-slate-800/60 pb-4">
+            <Card className="h-full flex flex-col">
+              <CardHeader className="border-b-2 border-dashed border-[#111111]/20 pb-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <CardTitle className="text-base font-semibold">{selectedMessage.subject}</CardTitle>
-                    <CardDescription className="text-xs mt-1">
-                      From: <span className="text-indigo-400">{selectedMessage.sender}</span> ({selectedMessage.company})
+                    <CardTitle>{selectedMessage.subject}</CardTitle>
+                    <CardDescription>
+                      From: <span className="font-bold text-[#111111]">{selectedMessage.sender}</span> ({selectedMessage.company})
                     </CardDescription>
                   </div>
-                  <span className="text-xs text-slate-500">{selectedMessage.received_at}</span>
+                  <Tag variant="paper">{selectedMessage.received_at}</Tag>
                 </div>
               </CardHeader>
               <CardContent className="p-6 flex-1 flex flex-col justify-between space-y-6">
-                <div className="text-xs text-slate-300 leading-relaxed whitespace-pre-line font-sans">
+                <div className="text-sm font-hand text-[#111111] leading-relaxed whitespace-pre-line bg-[#FAFAF5] p-5 rounded-lg border-2 border-[#111111] shadow-[2px_2px_0_#111111]">
                   {selectedMessage.body}
                 </div>
 
                 {/* AI Reply Assistant */}
-                <div className="border border-slate-800 bg-slate-950/60 rounded-xl p-4 space-y-3">
+                <div className="border-2 border-[#111111] bg-[#FAFAF5] rounded-xl p-4 space-y-3 shadow-[3px_3px_0_#111111]">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-indigo-400 flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      <span>Suggested Response</span>
+                    <span className="font-marker text-sm text-[#111111] flex items-center gap-1.5">
+                      <Sparkles className="h-4 w-4" />
+                      <span>Suggested Response (Ready for Review)</span>
                     </span>
-                    <Button size="sm" className="h-7 text-xs bg-indigo-600 hover:bg-indigo-500 gap-1.5">
-                      <Send className="h-3 w-3" />
-                      <span>Send via Gmail</span>
+                    <Button size="sm" variant="default" className="h-8 gap-1.5 text-xs">
+                      <Send className="h-3.5 w-3.5" />
+                      <span>Authorize Send</span>
                     </Button>
                   </div>
                   <textarea
                     readOnly
                     value={`Hi Alexa,\n\nThank you for the update! I am excited to discuss the role and walk through my engineering work at 1337 UM6P and RiLyMed.\n\nI have selected a slot on your Calendly link for Tuesday at 3:00 PM.\n\nLooking forward to speaking with the team.\n\nBest regards,\nSolayman El Mouden`}
-                    className="w-full h-32 bg-slate-900/80 border border-slate-800/80 rounded-lg p-3 text-xs text-slate-300 focus:outline-none resize-none font-sans"
+                    className="w-full h-32 bg-[#FFFFFF] border-2 border-[#111111] rounded-lg p-3 text-xs font-mono text-[#111111] focus:outline-none resize-none"
                   />
                 </div>
               </CardContent>
@@ -127,4 +125,3 @@ export default function RecruiterInboxPage() {
     </MainLayout>
   );
 }
-

@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { getDocuments, getCandidateProfile } from '@/lib/api';
 import { Document, CandidateProfile } from '@/types';
+import { Tag } from '@/components/sketch/tag';
 
 export default function CVManagerPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -72,94 +73,96 @@ export default function CVManagerPage() {
 
   return (
     <MainLayout
-      title="Curriculum Vitae Manager"
-      description="Original CV source of truth and AI-tailored job-specific resumes."
+      title="Curriculum Vitae Studio"
+      description="Original CV source of truth & job-tailored resumes for Solayman El Mouden."
       onRefresh={loadData}
       isRefreshing={loading}
     >
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-7xl mx-auto">
         {/* Upload Original CV Banner */}
-        <Card className="border-indigo-500/20 bg-indigo-950/20">
-          <CardContent className="p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <h3 className="font-semibold text-slate-100 flex items-center gap-2">
-                <FileText className="h-4 w-4 text-indigo-400" />
-                <span>Primary CV (Source of Truth)</span>
-              </h3>
-              <p className="text-xs text-slate-400">
-                Uploaded document is parsed to extract strictly factual background. AI will never fabricate credentials.
+        <div className="p-6 bg-[#FAFAF5] border-[2.5px] border-[#111111] shadow-[3.5px_3.5px_0_#111111] rounded-[220px_12px_200px_12px/12px_200px_12px_220px] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h3 className="font-marker text-xl text-[#111111] flex items-center gap-2">
+              <FileText className="h-5 w-5 text-[#111111]" />
+              <span>Primary Master CV (Source of Truth)</span>
+            </h3>
+            <p className="font-hand text-base text-[#6B6B66]">
+              Uploaded document is parsed to extract strictly factual background (1337 UM6P, RiLyMed DevOps). AI will never fabricate credentials.
+            </p>
+            {candidate?.original_cv_path && (
+              <p className="text-xs text-[#111111] flex items-center gap-1.5 font-mono pt-1">
+                <CheckCircle className="h-4 w-4 text-emerald-600" />
+                <span className="font-bold">Active File: {candidate.original_cv_path.split('/').pop()}</span>
               </p>
-              {candidate?.original_cv_path && (
-                <p className="text-xs text-emerald-400 flex items-center gap-1 font-mono pt-1">
-                  <CheckCircle className="h-3.5 w-3.5" />
-                  <span>Current: {candidate.original_cv_path.split('/').pop()}</span>
-                </p>
-              )}
-            </div>
+            )}
+          </div>
 
-            <div>
-              <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition-all">
-                <Upload className="h-3.5 w-3.5" />
-                <span>{uploading ? 'Parsing CV...' : 'Upload PDF / DOCX'}</span>
-                <input
-                  type="file"
-                  accept=".pdf,.docx,.doc"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  disabled={uploading}
-                />
-              </label>
-              {uploadSuccess && (
-                <p className="text-[11px] text-emerald-400 text-center mt-1">Uploaded &amp; parsed!</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+          <div>
+            <label className="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 rounded-[150px_10px_120px_8px/10px_120px_8px_150px] bg-[#FFEB00] border-2 border-[#111111] shadow-[2.5px_2.5px_0_#111111] text-[#111111] text-xs font-mono font-bold uppercase tracking-wider hover:-translate-y-0.5 active:translate-y-0.5 transition-all">
+              <Upload className="h-4 w-4" />
+              <span>{uploading ? 'Parsing CV...' : 'Upload PDF / DOCX'}</span>
+              <input
+                type="file"
+                accept=".pdf,.docx,.doc"
+                onChange={handleFileUpload}
+                className="hidden"
+                disabled={uploading}
+              />
+            </label>
+            {uploadSuccess && (
+              <p className="text-xs font-mono font-bold text-emerald-700 text-center mt-1">
+                ✓ Parsed successfully!
+              </p>
+            )}
+          </div>
+        </div>
 
         {/* Tailored Resumes List & Preview */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* List of tailored CVs */}
           <div className="space-y-3">
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <h4 className="font-marker text-base text-[#111111]">
               Tailored CV Versions ({documents.length})
             </h4>
             {documents.length === 0 ? (
-              <Card className="border-slate-800 bg-slate-900/40 p-6 text-center text-xs text-slate-500">
+              <Card className="p-6 text-center text-xs font-hand text-[#6B6B66]">
                 No tailored CVs generated yet. Open a qualified job and click &quot;Generate Tailored CV&quot;.
               </Card>
             ) : (
               documents.map((doc) => (
-                <Card
+                <div
                   key={doc.id}
                   onClick={() => setSelectedDoc(doc)}
-                  className={`border-slate-800/80 bg-slate-900/40 cursor-pointer p-4 transition-all hover:border-slate-700 ${
-                    selectedDoc?.id === doc.id ? 'border-indigo-500/50 bg-indigo-950/10' : ''
+                  className={`bg-[#FFFFFF] border-2 border-[#111111] shadow-[2.5px_2.5px_0_#111111] rounded-lg cursor-pointer p-4 transition-all hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#111111] ${
+                    selectedDoc?.id === doc.id ? 'bg-[#FFEB00]/25 -rotate-1 border-[2.5px]' : ''
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-slate-200 text-xs">
+                    <span className="font-marker text-sm text-[#111111]">
                       {doc.metadata_?.company ? `${doc.metadata_.company} — CV` : `CV v${doc.version}`}
                     </span>
-                    <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
+                    <Tag variant={selectedDoc?.id === doc.id ? 'yellow' : 'paper'}>
                       {doc.language}
-                    </span>
+                    </Tag>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1 truncate">
+                  <p className="font-hand text-sm text-[#6B6B66] mt-1 truncate">
                     {doc.metadata_?.job_title || 'Software Engineer'}
                   </p>
-                </Card>
+                </div>
               ))
             )}
           </div>
 
           {/* Document Preview Pane */}
           <div className="lg:col-span-2">
-            <Card className="border-slate-800 bg-slate-900/40 h-full flex flex-col">
-              <CardHeader className="flex flex-row items-center justify-between border-b border-slate-800/60 pb-3">
+            <Card className="h-full flex flex-col">
+              <CardHeader className="flex flex-row items-center justify-between border-b-2 border-dashed border-[#111111]/20 pb-3">
                 <div>
-                  <CardTitle className="text-sm font-semibold">Document Preview</CardTitle>
-                  <CardDescription className="text-xs">
-                    {selectedDoc ? `Version ${selectedDoc.version} (${selectedDoc.language.toUpperCase()})` : 'Select a document'}
+                  <CardTitle>Document Preview</CardTitle>
+                  <CardDescription>
+                    {selectedDoc
+                      ? `Version ${selectedDoc.version} (${selectedDoc.language.toUpperCase()})`
+                      : 'Select a document'}
                   </CardDescription>
                 </div>
                 {selectedDoc && (
@@ -168,14 +171,14 @@ export default function CVManagerPage() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <Button size="sm" variant="outline" className="h-8 gap-2 border-slate-700 text-xs">
+                    <Button size="sm" variant="default" className="h-8 gap-1.5 text-xs">
                       <Download className="h-3.5 w-3.5" />
                       <span>Download PDF</span>
                     </Button>
                   </a>
                 )}
               </CardHeader>
-              <CardContent className="p-6 flex-1 overflow-y-auto max-h-[650px] font-mono text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">
+              <CardContent className="p-6 flex-1 overflow-y-auto max-h-[650px] font-mono text-xs text-[#111111] bg-[#FAFAF5] m-4 rounded-lg border-2 border-[#111111] shadow-[2px_2px_0_#111111] leading-relaxed whitespace-pre-wrap">
                 {selectedDoc?.content || 'No document content selected.'}
               </CardContent>
             </Card>
@@ -185,4 +188,3 @@ export default function CVManagerPage() {
     </MainLayout>
   );
 }
-

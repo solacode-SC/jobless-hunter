@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { getDocuments } from '@/lib/api';
 import { Document } from '@/types';
+import { Tag } from '@/components/sketch/tag';
 
 export default function CoverLettersPage() {
   const [letters, setLetters] = useState<Document[]>([]);
@@ -65,53 +66,53 @@ export default function CoverLettersPage() {
   return (
     <MainLayout
       title="Cover Letter Studio"
-      description="Tailored, high-impact letters generated for each application."
+      description="Tailored, high-impact letters generated for Solayman El Mouden's applications."
       onRefresh={loadData}
       isRefreshing={loading}
     >
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Letters list */}
           <div className="space-y-3">
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <h4 className="font-marker text-base text-[#111111]">
               Cover Letters ({letters.length})
             </h4>
             {letters.length === 0 ? (
-              <Card className="border-slate-800 bg-slate-900/40 p-6 text-center text-xs text-slate-500">
+              <Card className="p-6 text-center text-xs font-hand text-[#6B6B66]">
                 No cover letters generated yet. Generate one from a job detail page.
               </Card>
             ) : (
               letters.map((doc) => (
-                <Card
+                <div
                   key={doc.id}
                   onClick={() => handleSelectLetter(doc)}
-                  className={`border-slate-800/80 bg-slate-900/40 cursor-pointer p-4 transition-all hover:border-slate-700 ${
-                    selectedLetter?.id === doc.id ? 'border-purple-500/50 bg-purple-950/10' : ''
+                  className={`bg-[#FFFFFF] border-2 border-[#111111] shadow-[2.5px_2.5px_0_#111111] rounded-lg cursor-pointer p-4 transition-all hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#111111] ${
+                    selectedLetter?.id === doc.id ? 'bg-[#FFEB00]/25 -rotate-1 border-[2.5px]' : ''
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-slate-200 text-xs">
+                    <span className="font-marker text-sm text-[#111111]">
                       {doc.metadata_?.company ? `${doc.metadata_.company}` : `Cover Letter v${doc.version}`}
                     </span>
-                    <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
+                    <Tag variant={selectedLetter?.id === doc.id ? 'yellow' : 'paper'}>
                       {doc.language}
-                    </span>
+                    </Tag>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1 truncate">
+                  <p className="font-hand text-sm text-[#6B6B66] mt-1 truncate">
                     {doc.metadata_?.job_title || 'Software Engineer'}
                   </p>
-                </Card>
+                </div>
               ))
             )}
           </div>
 
           {/* Letter Editor */}
           <div className="lg:col-span-2">
-            <Card className="border-slate-800 bg-slate-900/40 h-full flex flex-col">
-              <CardHeader className="flex flex-row items-center justify-between border-b border-slate-800/60 pb-3">
+            <Card className="h-full flex flex-col">
+              <CardHeader className="flex flex-row items-center justify-between border-b-2 border-dashed border-[#111111]/20 pb-3">
                 <div>
-                  <CardTitle className="text-sm font-semibold">Cover Letter Editor</CardTitle>
-                  <CardDescription className="text-xs">
+                  <CardTitle>Cover Letter Editor</CardTitle>
+                  <CardDescription>
                     {selectedLetter?.metadata_?.company
                       ? `Application for ${selectedLetter.metadata_.company}`
                       : 'Edit and approve before dispatch'}
@@ -124,7 +125,7 @@ export default function CoverLettersPage() {
                       target="_blank"
                       rel="noreferrer"
                     >
-                      <Button size="sm" variant="outline" className="h-8 gap-2 border-slate-700 text-xs">
+                      <Button size="sm" variant="secondary" className="h-8 gap-1.5 text-xs">
                         <Download className="h-3.5 w-3.5" />
                         <span>Download PDF</span>
                       </Button>
@@ -133,9 +134,10 @@ export default function CoverLettersPage() {
 
                   <Button
                     size="sm"
+                    variant="default"
                     onClick={handleSave}
                     disabled={saving || !selectedLetter}
-                    className="h-8 gap-1.5 bg-purple-600 hover:bg-purple-500 text-xs"
+                    className="h-8 gap-1.5 text-xs"
                   >
                     <Save className="h-3.5 w-3.5" />
                     <span>{saving ? 'Saving...' : 'Save & Approve'}</span>
@@ -144,16 +146,16 @@ export default function CoverLettersPage() {
               </CardHeader>
               <CardContent className="p-4 flex-1 flex flex-col">
                 {savedSuccess && (
-                  <div className="mb-3 p-2.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Cover letter saved and PDF updated!</span>
+                  <div className="mb-3 p-3 rounded-lg bg-[#FFEB00]/30 border-2 border-[#111111] shadow-[2px_2px_0_#111111] text-[#111111] text-xs font-mono font-bold flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-emerald-700" />
+                    <span>✓ Cover letter saved and PDF updated!</span>
                   </div>
                 )}
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Select a cover letter to view or edit..."
-                  className="flex-1 w-full bg-slate-950/60 border border-slate-800 rounded-lg p-4 font-sans text-xs text-slate-200 leading-relaxed focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none min-h-[450px]"
+                  className="flex-1 w-full bg-[#FAFAF5] border-2 border-[#111111] shadow-[2.5px_2.5px_0_#111111] rounded-lg p-4 font-mono text-xs text-[#111111] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#FFEB00] resize-none min-h-[450px]"
                 />
               </CardContent>
             </Card>
@@ -163,4 +165,3 @@ export default function CoverLettersPage() {
     </MainLayout>
   );
 }
-

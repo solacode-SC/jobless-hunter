@@ -1,31 +1,42 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useEffect, useState, use } from 'react';
+import Link from 'next/link';
 import {
+  ArrowLeft,
   Building2,
   MapPin,
   ExternalLink,
   Sparkles,
   FileText,
   Mail,
-  ArrowLeft,
+  Send,
   CheckCircle,
-  XCircle,
   Clock,
   ShieldCheck,
+  Bot,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/main-layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge, MatchScoreBadge } from '@/components/ui/status-badge';
-import { getJob, evaluateJob, generateCV, generateCoverLetter, getCandidateProfile } from '@/lib/api';
+import { Tag } from '@/components/sketch/tag';
+import {
+  getJob,
+  evaluateJob,
+  generateCV,
+  generateCoverLetter,
+  getCandidateProfile,
+} from '@/lib/api';
 import { Job, CandidateProfile } from '@/types';
 
-export default function JobDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const jobId = params?.id as string;
+export default function JobDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const resolvedParams = use(params);
+  const id = resolvedParams.id;
 
   const [job, setJob] = useState<Job | null>(null);
   const [candidate, setCandidate] = useState<CandidateProfile | null>(null);
@@ -35,10 +46,10 @@ export default function JobDetailPage() {
   const [generatingCover, setGeneratingCover] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
-  const loadData = async () => {
+  const loadJobData = async () => {
     setLoading(true);
     try {
-      const [j, c] = await Promise.all([getJob(jobId), getCandidateProfile()]);
+      const [j, c] = await Promise.all([getJob(id), getCandidateProfile()]);
       setJob(j);
       setCandidate(c);
     } catch (e) {
@@ -49,15 +60,16 @@ export default function JobDetailPage() {
   };
 
   useEffect(() => {
-    if (jobId) loadData();
-  }, [jobId]);
+    loadJobData();
+  }, [id]);
 
   const handleEvaluate = async () => {
     setEvaluating(true);
     try {
-      await evaluateJob(jobId);
-      await loadData();
-      setActionMessage('Job evaluated successfully against Solayman El Mouden profile!');
+      await evaluateJob(id);
+      await loadJobData();
+      setActionMessage('✓ AI match evaluation complete!');
+      setTimeout(() => setActionMessage(null), 4000);
     } catch (e) {
       console.error(e);
     } finally {
@@ -66,12 +78,12 @@ export default function JobDetailPage() {
   };
 
   const handleGenerateCV = async () => {
-    if (!candidate || !job) return;
+    if (!candidate) return;
     setGeneratingCV(true);
     try {
-      await generateCV(candidate.id, job.id, 'en');
-      setActionMessage('Tailored CV generated and saved to CV Manager!');
-      setTimeout(() => router.push('/cv-manager'), 1500);
+      await generateCV(candidate.id, id, 'en');
+      setActionMessage('✓ Truthful tailored CV generated! View in CV Manager.');
+      setTimeout(() => setActionMessage(null), 4000);
     } catch (e) {
       console.error(e);
     } finally {
@@ -80,12 +92,12 @@ export default function JobDetailPage() {
   };
 
   const handleGenerateCover = async () => {
-    if (!candidate || !job) return;
+    if (!candidate) return;
     setGeneratingCover(true);
     try {
-      await generateCoverLetter(candidate.id, job.id, 'en');
-      setActionMessage('Tailored Cover Letter generated and saved to Cover Letters!');
-      setTimeout(() => router.push('/cover-letters'), 1500);
+      await generateCoverLetter(candidate.id, id, 'en');
+      setActionMessage('✓ Job-specific cover letter generated! View in Cover Letters.');
+      setTimeout(() => setActionMessage(null), 4000);
     } catch (e) {
       console.error(e);
     } finally {
@@ -93,55 +105,49 @@ export default function JobDetailPage() {
     }
   };
 
-  if (loading) {
+  if (loading || !job) {
     return (
-      <MainLayout title="Job Details">
-        <div className="p-12 text-center text-slate-500 text-sm">Loading job listing...</div>
+      <MainLayout title="Job Opportunity">
+        <div className="py-20 text-center font-hand text-xl text-[#6B6B66]">
+          Loading opportunity specifications...
+        </div>
       </MainLayout>
     );
   }
 
-  if (!job) {
-    return (
-      <MainLayout title="Job Details">
-        <div className="p-12 text-center text-slate-400">Job not found.</div>
-      </MainLayout>
-    );
-  }
-
-  const aiEval = job.raw_data?.ai_evaluation;
+  const aiEval = (job as any).ai_evaluation || job.raw_data?.ai_evaluation;
 
   return (
     <MainLayout
       title={job.title}
-      description={`At ${job.company} — Discovered via ${job.source}`}
-      onRefresh={loadData}
+      description={`Discovered from ${job.source.replace('_', ' ')} • Scored against Solayman El Mouden's credentials.`}
+      onRefresh={loadJobData}
     >
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.back()}
-            className="gap-2 text-slate-400 hover:text-slate-100"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to listings</span>
-          </Button>
+      <div className="space-y-6 max-w-7xl mx-auto">
+        {/* Navigation & Actions Top Bar */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <Link href="/jobs">
+            <Button variant="secondary" size="sm" className="gap-1.5 text-xs">
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Job Harvester</span>
+            </Button>
+          </Link>
 
-          {job.source_url && (
-            <a href={job.source_url} target="_blank" rel="noreferrer">
-              <Button size="sm" variant="outline" className="gap-2 border-slate-700 text-xs">
-                <span>View Original Posting</span>
-                <ExternalLink className="h-3.5 w-3.5" />
-              </Button>
-            </a>
-          )}
+          <div className="flex items-center gap-2">
+            {job.source_url && (
+              <a href={job.source_url} target="_blank" rel="noreferrer">
+                <Button size="sm" variant="secondary" className="gap-1.5 text-xs">
+                  <span>Original Listing</span>
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Button>
+              </a>
+            )}
+          </div>
         </div>
 
         {actionMessage && (
-          <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 shrink-0" />
+          <div className="p-4 rounded-lg bg-[#FFEB00]/30 border-2 border-[#111111] shadow-[3px_3px_0_#111111] text-[#111111] font-mono text-xs font-bold flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-emerald-700 shrink-0" />
             <span>{actionMessage}</span>
           </div>
         )}
@@ -149,20 +155,22 @@ export default function JobDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Job Description */}
           <div className="lg:col-span-2 space-y-6">
-            <Card className="border-slate-800 bg-slate-900/40">
-              <CardHeader>
+            <Card>
+              <CardHeader className="border-b-2 border-dashed border-[#111111]/20 pb-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <CardTitle className="text-xl font-bold">{job.title}</CardTitle>
-                    <div className="flex items-center gap-4 text-xs text-slate-400 mt-2">
-                      <span className="flex items-center gap-1 text-slate-300 font-medium">
-                        <Building2 className="h-3.5 w-3.5 text-slate-500" />
+                    <CardTitle className="text-2xl">{job.title}</CardTitle>
+                    <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-[#6B6B66] mt-2">
+                      <span className="flex items-center gap-1 text-[#111111] font-bold">
+                        <Building2 className="h-3.5 w-3.5" />
                         {job.company}
                       </span>
+                      <span>•</span>
                       <span className="flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5 text-slate-500" />
+                        <MapPin className="h-3.5 w-3.5" />
                         {job.location || 'Remote'}
                       </span>
+                      <span>•</span>
                       <span className="capitalize">{job.employment_type?.replace('_', ' ')}</span>
                     </div>
                   </div>
@@ -172,7 +180,7 @@ export default function JobDetailPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm text-slate-300 leading-relaxed whitespace-pre-line border-t border-slate-800/60 pt-4">
+              <CardContent className="space-y-4 text-sm font-body text-[#111111] leading-relaxed whitespace-pre-line pt-5">
                 {job.description || 'No description text provided.'}
               </CardContent>
             </Card>
@@ -180,40 +188,43 @@ export default function JobDetailPage() {
 
           {/* AI Match & Actions Sidebar */}
           <div className="space-y-6">
-            <Card className="border-slate-800 bg-slate-900/40">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-indigo-400" />
+            <Card>
+              <CardHeader className="border-b-2 border-dashed border-[#111111]/20 pb-3">
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-[#111111]" />
                   <span>AI Match Assessment</span>
                 </CardTitle>
-                <CardDescription className="text-xs">Candidate: Solayman El Mouden</CardDescription>
+                <CardDescription>Candidate: Solayman El Mouden</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pt-4">
                 {job.match_score !== null ? (
-                  <div className="space-y-3">
-                    <div className="p-4 rounded-lg bg-slate-950/60 border border-slate-800/80 text-center">
-                      <div className="text-3xl font-extrabold text-indigo-400">{job.match_score}%</div>
-                      <p className="text-xs text-slate-400 mt-1 capitalize">
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-lg bg-[#FAFAF5] border-2 border-[#111111] shadow-[2.5px_2.5px_0_#111111] text-center">
+                      <div className="font-marker text-4xl text-[#111111]">{job.match_score}%</div>
+                      <p className="font-hand text-base font-bold text-[#6B6B66] mt-1 capitalize">
                         {aiEval?.classification || 'Evaluated Fit'}
                       </p>
                     </div>
 
                     {job.match_explanation && (
-                      <div className="text-xs text-slate-300 bg-slate-950/40 p-3 rounded-lg border border-slate-800/60">
-                        <p className="font-semibold text-slate-200 mb-1">Match Rationale</p>
-                        <p>{job.match_explanation}</p>
+                      <div className="text-xs bg-[#FFFFFF] p-3.5 rounded-lg border-2 border-[#111111] shadow-[2px_2px_0_#111111]">
+                        <p className="font-marker text-xs text-[#111111] mb-1">Match Rationale</p>
+                        <p className="font-hand text-sm text-[#111111] leading-snug">{job.match_explanation}</p>
                       </div>
                     )}
 
                     {aiEval?.matched_skills && aiEval.matched_skills.length > 0 && (
                       <div>
-                        <p className="text-xs font-semibold text-emerald-400 mb-1 flex items-center gap-1">
-                          <CheckCircle className="h-3 w-3" />
+                        <p className="text-xs font-mono font-bold text-[#111111] mb-1.5 flex items-center gap-1">
+                          <CheckCircle className="h-3.5 w-3.5 text-emerald-700" />
                           <span>Matched Skills</span>
                         </p>
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1.5">
                           {aiEval.matched_skills.map((sk: string) => (
-                            <span key={sk} className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <span
+                              key={sk}
+                              className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#FFEB00] text-[#111111] border border-[#111111] shadow-[1px_1px_0_#111111]"
+                            >
                               {sk}
                             </span>
                           ))}
@@ -223,13 +234,16 @@ export default function JobDetailPage() {
 
                     {aiEval?.missing_skills && aiEval.missing_skills.length > 0 && (
                       <div>
-                        <p className="text-xs font-semibold text-amber-400 mb-1 flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
+                        <p className="text-xs font-mono font-bold text-[#6B6B66] mb-1.5 flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5 text-[#6B6B66]" />
                           <span>Identified Gaps / Stretches</span>
                         </p>
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1.5">
                           {aiEval.missing_skills.map((sk: string) => (
-                            <span key={sk} className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            <span
+                              key={sk}
+                              className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#FAFAF5] text-[#6B6B66] border border-dashed border-[#111111]/40"
+                            >
                               {sk}
                             </span>
                           ))}
@@ -239,13 +253,14 @@ export default function JobDetailPage() {
                   </div>
                 ) : (
                   <div className="text-center py-4 space-y-3">
-                    <p className="text-xs text-slate-400">This job hasn&apos;t been evaluated against your CV yet.</p>
+                    <p className="font-hand text-base text-[#6B6B66]">This job hasn&apos;t been evaluated against your CV yet.</p>
                     <Button
                       onClick={handleEvaluate}
                       disabled={evaluating}
-                      className="w-full gap-2 bg-indigo-600 hover:bg-indigo-500 text-xs"
+                      variant="default"
+                      className="w-full gap-2 text-xs"
                     >
-                      <Sparkles className="h-3.5 w-3.5" />
+                      <Sparkles className="h-4 w-4" />
                       <span>{evaluating ? 'Evaluating...' : 'Run AI Match'}</span>
                     </Button>
                   </div>
@@ -254,34 +269,34 @@ export default function JobDetailPage() {
             </Card>
 
             {/* Document Generation Actions */}
-            <Card className="border-slate-800 bg-slate-900/40">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-emerald-400" />
+            <Card>
+              <CardHeader className="border-b-2 border-dashed border-[#111111]/20 pb-3">
+                <CardTitle className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-[#111111]" />
                   <span>Truthful Document Generator</span>
                 </CardTitle>
-                <CardDescription className="text-xs">
+                <CardDescription>
                   Generates job-targeted assets preserving strictly verified facts.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 pt-4">
                 <Button
                   onClick={handleGenerateCV}
                   disabled={generatingCV}
-                  variant="outline"
-                  className="w-full justify-start gap-2 text-xs border-indigo-500/30 hover:bg-indigo-500/10 text-slate-200"
+                  variant="secondary"
+                  className="w-full justify-start gap-2 text-xs"
                 >
-                  <FileText className="h-4 w-4 text-indigo-400" />
+                  <FileText className="h-4 w-4" />
                   <span>{generatingCV ? 'Generating Tailored CV...' : 'Generate Tailored CV'}</span>
                 </Button>
 
                 <Button
                   onClick={handleGenerateCover}
                   disabled={generatingCover}
-                  variant="outline"
-                  className="w-full justify-start gap-2 text-xs border-purple-500/30 hover:bg-purple-500/10 text-slate-200"
+                  variant="secondary"
+                  className="w-full justify-start gap-2 text-xs"
                 >
-                  <Mail className="h-4 w-4 text-purple-400" />
+                  <Mail className="h-4 w-4" />
                   <span>{generatingCover ? 'Writing Cover Letter...' : 'Generate Cover Letter'}</span>
                 </Button>
               </CardContent>
@@ -292,4 +307,3 @@ export default function JobDetailPage() {
     </MainLayout>
   );
 }
-

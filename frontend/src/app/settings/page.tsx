@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Sliders, Cpu, Shield, Database, Save, CheckCircle2, Zap, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings as SettingsIcon, Sliders, Shield, Sparkles, CheckCircle2, Save, Cpu } from 'lucide-react';
 import { MainLayout } from '@/components/layout/main-layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Tag } from '@/components/sketch/tag';
 
 export default function SettingsPage() {
   const [providerPreference, setProviderPreference] = useState('auto');
@@ -17,88 +17,69 @@ export default function SettingsPage() {
   const [indeedActive, setIndeedActive] = useState(true);
   const [googleJobsActive, setGoogleJobsActive] = useState(true);
   const [saved, setSaved] = useState(false);
-  const [providersStatus, setProvidersStatus] = useState<any[]>([]);
-
-  useEffect(() => {
-    fetch('http://localhost:9878/api/ai/providers')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.providers) setProvidersStatus(data.providers);
-        if (data.active_preference) setProviderPreference(data.active_preference);
-      })
-      .catch(() => {
-        setProvidersStatus([
-          { name: 'deepseek', model: 'deepseek-chat', configured: true },
-          { name: 'gemini', model: 'gemini-2.5-flash', configured: true },
-          { name: 'openai', model: 'gpt-4o', configured: false },
-        ]);
-      });
-  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await fetch('http://localhost:9878/api/ai/select', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider: providerPreference }),
-      });
-    } catch {
-      // Ignore if offline
-    }
     setSaved(true);
+
+    try {
+      await fetch(`http://localhost:9878/api/ai/select?provider=${providerPreference}`, {
+        method: 'POST',
+      });
+    } catch (err) {
+      console.error(err);
+    }
+
     setTimeout(() => setSaved(false), 3000);
   };
 
   return (
     <MainLayout
-      title="System Settings"
-      description="Configure AI intelligence engine, model failover, thresholds, and discovery sources."
+      title="System Settings &amp; AI Engine Configuration"
+      description="Autonomous crawler frequency, AI provider switching & strict port compliance for Solayman El Mouden."
     >
-      <form onSubmit={handleSave} className="space-y-6 max-w-4xl">
+      <form onSubmit={handleSave} className="space-y-6 max-w-4xl mx-auto">
         {saved && (
-          <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4" />
-            <span>Settings saved successfully. Active AI engine updated.</span>
+          <div className="p-4 rounded-lg bg-[#FFEB00]/30 border-2 border-[#111111] shadow-[3px_3px_0_#111111] text-[#111111] font-mono text-xs font-bold flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-emerald-700" />
+            <span>✓ Settings saved successfully. Active AI engine updated.</span>
           </div>
         )}
 
         {/* AI Multi-Provider Configuration */}
-        <Card className="border-indigo-500/30 bg-slate-900/60 shadow-lg shadow-indigo-500/5">
-          <CardHeader>
-            <div className="flex items-center justify-between">
+        <Card>
+          <CardHeader className="border-b-2 border-dashed border-[#111111]/20 pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-indigo-400" />
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-[#111111]" />
                   <span>AI Engine — DeepSeek &amp; Google Gemini</span>
                 </CardTitle>
-                <CardDescription className="text-xs mt-1">
-                  Automated intelligence with smart health checking, multi-model selection, and auto-failover.
+                <CardDescription>
+                  Automated intelligence with multi-model selection and runtime auto-failover.
                 </CardDescription>
               </div>
-              <Badge variant="outline" className="border-indigo-500/40 text-indigo-300 text-[10px]">
-                Multi-Model Failover
-              </Badge>
+              <Tag variant="yellow">Dual LLM Core</Tag>
             </div>
           </CardHeader>
-          <CardContent className="space-y-5">
+          <CardContent className="space-y-5 pt-4">
             <div>
-              <label className="text-xs font-medium text-slate-300 block mb-1.5">
+              <label className="text-xs font-mono font-bold text-[#111111] block mb-1.5">
                 Active Provider Selection Strategy
               </label>
               <select
                 value={providerPreference}
                 onChange={(e) => setProviderPreference(e.target.value)}
-                className="w-full bg-slate-950/80 border border-slate-700/80 rounded-lg px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+                className="w-full bg-[#FAFAF5] border-2 border-[#111111] shadow-[2.5px_2.5px_0_#111111] rounded-lg px-3.5 py-2.5 text-xs font-mono text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#FFEB00] font-bold"
               >
                 <option value="auto">
-                  ⚡ Auto-Select (Recommended: Selects best available, fails over between DeepSeek &amp; Gemini)
+                  ⚡ Auto-Select (Recommended: Evaluates with DeepSeek, fails over to Gemini seamlessly)
                 </option>
                 <option value="deepseek">
                   🧠 DeepSeek AI Only (deepseek-chat / deepseek-reasoner)
                 </option>
                 <option value="gemini">
-                  ✨ Google Gemini Only (gemini-2.5-flash / gemini-2.0-flash)
+                  ✨ Google Gemini Only (gemini-2.5-flash)
                 </option>
                 <option value="openai">
                   🌐 OpenAI (gpt-4o fallback)
@@ -107,34 +88,30 @@ export default function SettingsPage() {
             </div>
 
             {/* Provider Status Badges */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-              <div className="p-3.5 rounded-lg bg-slate-950/60 border border-slate-800 flex items-center justify-between">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="p-4 rounded-lg bg-[#FAFAF5] border-2 border-[#111111] shadow-[2.5px_2.5px_0_#111111] flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-semibold text-slate-200">DeepSeek AI</p>
-                  <p className="text-[10px] text-slate-400">Endpoint: api.deepseek.com</p>
-                  <p className="text-[10px] text-indigo-400 font-mono mt-0.5">Model: {deepseekModel}</p>
+                  <p className="font-marker text-sm text-[#111111]">DeepSeek AI</p>
+                  <p className="text-[11px] font-mono text-[#6B6B66]">Endpoint: api.deepseek.com</p>
+                  <p className="text-xs font-mono font-bold text-[#111111] mt-0.5">Model: {deepseekModel}</p>
                 </div>
-                <Badge variant="success" className="text-[10px]">
-                  Supported
-                </Badge>
+                <Tag variant="yellow">Active</Tag>
               </div>
 
-              <div className="p-3.5 rounded-lg bg-slate-950/60 border border-slate-800 flex items-center justify-between">
+              <div className="p-4 rounded-lg bg-[#FAFAF5] border-2 border-[#111111] shadow-[2.5px_2.5px_0_#111111] flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-semibold text-slate-200">Google Gemini</p>
-                  <p className="text-[10px] text-slate-400">Endpoint: generativelanguage.googleapis.com</p>
-                  <p className="text-[10px] text-purple-400 font-mono mt-0.5">Model: {geminiModel}</p>
+                  <p className="font-marker text-sm text-[#111111]">Google Gemini</p>
+                  <p className="text-[11px] font-mono text-[#6B6B66]">Endpoint: generativelanguage.googleapis.com</p>
+                  <p className="text-xs font-mono font-bold text-[#111111] mt-0.5">Model: {geminiModel}</p>
                 </div>
-                <Badge variant="success" className="text-[10px]">
-                  Supported
-                </Badge>
+                <Tag variant="paper">Supported</Tag>
               </div>
             </div>
 
             {/* Threshold Slider */}
-            <div className="pt-2 border-t border-slate-800/80">
-              <label className="text-xs font-medium text-slate-300 block mb-1">
-                AI Match Qualification Threshold: <span className="text-indigo-400 font-bold">{threshold}%</span>
+            <div className="pt-3 border-t-2 border-dashed border-[#111111]/20">
+              <label className="text-xs font-mono font-bold text-[#111111] block mb-1">
+                AI Match Qualification Threshold: <span className="bg-[#FFEB00] px-1.5 py-0.5 border border-[#111111] rounded">{threshold}%</span>
               </label>
               <input
                 type="range"
@@ -142,9 +119,9 @@ export default function SettingsPage() {
                 max="95"
                 value={threshold}
                 onChange={(e) => setThreshold(Number(e.target.value))}
-                className="w-full accent-indigo-500 mt-2"
+                className="w-full accent-[#111111] mt-2 cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+              <div className="flex justify-between text-xs font-mono text-[#6B6B66] mt-1">
                 <span>50% (Permissive)</span>
                 <span>70% (Balanced Fit)</span>
                 <span>95% (Strict Systems Match)</span>
@@ -154,99 +131,113 @@ export default function SettingsPage() {
         </Card>
 
         {/* Discovery Sources */}
-        <Card className="border-slate-800 bg-slate-900/40">
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Sliders className="h-4 w-4 text-indigo-400" />
+        <Card>
+          <CardHeader className="border-b-2 border-dashed border-[#111111]/20 pb-3">
+            <CardTitle className="flex items-center gap-2">
+              <Sliders className="h-5 w-5 text-[#111111]" />
               <span>Active Discovery Connectors</span>
             </CardTitle>
-            <CardDescription className="text-xs">
-              Continuous background crawling every 30 minutes.
+            <CardDescription>
+              Continuous background crawling every 30 minutes across official APIs and feeds.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <label className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800/80 cursor-pointer">
+          <CardContent className="space-y-3 pt-4">
+            <label className="flex items-center justify-between p-3.5 rounded-lg bg-[#FAFAF5] border-2 border-[#111111] shadow-[2px_2px_0_#111111] cursor-pointer hover:bg-[#FFFFFF] transition-colors">
               <div>
-                <p className="text-xs font-medium text-slate-200">Remote Developer Boards (Remotive, Arbeitnow)</p>
-                <p className="text-[11px] text-slate-400">Direct verified API feeds for remote tech roles</p>
+                <p className="font-marker text-sm text-[#111111]">Remote Developer Boards (Remotive, Arbeitnow)</p>
+                <p className="text-xs font-mono text-[#6B6B66]">Direct verified API feeds for remote tech roles</p>
               </div>
               <input
                 type="checkbox"
                 checked={remoteBoardActive}
                 onChange={(e) => setRemoteBoardActive(e.target.checked)}
-                className="h-4 w-4 accent-indigo-600 rounded"
+                className="h-5 w-5 accent-[#111111] rounded cursor-pointer"
               />
             </label>
 
-            <label className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800/80 cursor-pointer">
+            <label className="flex items-center justify-between p-3.5 rounded-lg bg-[#FAFAF5] border-2 border-[#111111] shadow-[2px_2px_0_#111111] cursor-pointer hover:bg-[#FFFFFF] transition-colors">
               <div>
-                <p className="text-xs font-medium text-slate-200">LinkedIn Guest Feed</p>
-                <p className="text-[11px] text-slate-400">Public search endpoint (no CAPTCHA bypass required)</p>
+                <p className="font-marker text-sm text-[#111111]">LinkedIn Feed Indexer</p>
+                <p className="text-xs font-mono text-[#6B6B66]">Public guest search endpoint (compliant, no CAPTCHA bypass)</p>
               </div>
               <input
                 type="checkbox"
                 checked={linkedinActive}
                 onChange={(e) => setLinkedinActive(e.target.checked)}
-                className="h-4 w-4 accent-indigo-600 rounded"
+                className="h-5 w-5 accent-[#111111] rounded cursor-pointer"
               />
             </label>
 
-            <label className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800/80 cursor-pointer">
+            <label className="flex items-center justify-between p-3.5 rounded-lg bg-[#FAFAF5] border-2 border-[#111111] shadow-[2px_2px_0_#111111] cursor-pointer hover:bg-[#FFFFFF] transition-colors">
               <div>
-                <p className="text-xs font-medium text-slate-200">Indeed RSS Search Indexer</p>
-                <p className="text-[11px] text-slate-400">Structured RSS feed parsing for software jobs</p>
+                <p className="font-marker text-sm text-[#111111]">Indeed RSS Search Indexer</p>
+                <p className="text-xs font-mono text-[#6B6B66]">Structured RSS feed parsing for software engineering roles</p>
               </div>
               <input
                 type="checkbox"
                 checked={indeedActive}
                 onChange={(e) => setIndeedActive(e.target.checked)}
-                className="h-4 w-4 accent-indigo-600 rounded"
+                className="h-5 w-5 accent-[#111111] rounded cursor-pointer"
               />
             </label>
 
-            <label className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800/80 cursor-pointer">
+            <label className="flex items-center justify-between p-3.5 rounded-lg bg-[#FAFAF5] border-2 border-[#111111] shadow-[2px_2px_0_#111111] cursor-pointer hover:bg-[#FFFFFF] transition-colors">
               <div>
-                <p className="text-xs font-medium text-slate-200">Google Jobs Indexer</p>
-                <p className="text-[11px] text-slate-400">SerpAPI / Google indexed postings</p>
+                <p className="font-marker text-sm text-[#111111]">Google Jobs Indexer</p>
+                <p className="text-xs font-mono text-[#6B6B66]">Google-indexed tech job postings</p>
               </div>
               <input
                 type="checkbox"
                 checked={googleJobsActive}
                 onChange={(e) => setGoogleJobsActive(e.target.checked)}
-                className="h-4 w-4 accent-indigo-600 rounded"
+                className="h-5 w-5 accent-[#111111] rounded cursor-pointer"
               />
             </label>
           </CardContent>
         </Card>
 
         {/* Infrastructure Port Allocations */}
-        <Card className="border-slate-800 bg-slate-900/40">
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Shield className="h-4 w-4 text-emerald-400" />
-              <span>Assigned Ports (Range 9876–9964)</span>
+        <Card>
+          <CardHeader className="border-b-2 border-dashed border-[#111111]/20 pb-3">
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-[#111111]" />
+              <span>Assigned Ports (Mandatory Range 9876–9964)</span>
             </CardTitle>
-            <CardDescription className="text-xs">
-              Verified isolated port mapping bound to localhost only.
+            <CardDescription>
+              Strict internal isolation bound to 127.0.0.1 without external port conflicts.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 font-mono text-xs">
-              <div className="p-2 rounded bg-slate-950/60 border border-slate-800/80">Next.js: <span className="text-indigo-400 font-bold">9876</span></div>
-              <div className="p-2 rounded bg-slate-950/60 border border-slate-800/80">n8n Engine: <span className="text-indigo-400 font-bold">9877</span></div>
-              <div className="p-2 rounded bg-slate-950/60 border border-slate-800/80">FastAPI API: <span className="text-indigo-400 font-bold">9878</span></div>
-              <div className="p-2 rounded bg-slate-950/60 border border-slate-800/80">PostgreSQL: <span className="text-indigo-400 font-bold">9879</span></div>
-              <div className="p-2 rounded bg-slate-950/60 border border-slate-800/80">Redis 7: <span className="text-indigo-400 font-bold">9880</span></div>
-              <div className="p-2 rounded bg-slate-950/60 border border-slate-800/80">Browser Worker: <span className="text-indigo-400 font-bold">9881</span></div>
+          <CardContent className="pt-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 font-mono text-xs">
+              <div className="p-3 rounded-lg bg-[#FAFAF5] border-2 border-[#111111] shadow-[1.5px_1.5px_0_#111111]">
+                Next.js: <span className="font-bold bg-[#FFEB00] px-1 border border-[#111111] rounded">9876</span>
+              </div>
+              <div className="p-3 rounded-lg bg-[#FAFAF5] border-2 border-[#111111] shadow-[1.5px_1.5px_0_#111111]">
+                n8n Engine: <span className="font-bold bg-[#FFEB00] px-1 border border-[#111111] rounded">9877</span>
+              </div>
+              <div className="p-3 rounded-lg bg-[#FAFAF5] border-2 border-[#111111] shadow-[1.5px_1.5px_0_#111111]">
+                FastAPI API: <span className="font-bold bg-[#FFEB00] px-1 border border-[#111111] rounded">9878</span>
+              </div>
+              <div className="p-3 rounded-lg bg-[#FAFAF5] border-2 border-[#111111] shadow-[1.5px_1.5px_0_#111111]">
+                PostgreSQL: <span className="font-bold bg-[#FAFAF5] px-1 border border-[#111111] rounded">9879</span>
+              </div>
+              <div className="p-3 rounded-lg bg-[#FAFAF5] border-2 border-[#111111] shadow-[1.5px_1.5px_0_#111111]">
+                Redis 7: <span className="font-bold bg-[#FAFAF5] px-1 border border-[#111111] rounded">9880</span>
+              </div>
+              <div className="p-3 rounded-lg bg-[#FAFAF5] border-2 border-[#111111] shadow-[1.5px_1.5px_0_#111111]">
+                Browser Worker: <span className="font-bold bg-[#FFEB00] px-1 border border-[#111111] rounded">9881</span>
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <Button
           type="submit"
-          className="gap-2 bg-indigo-600 hover:bg-indigo-500 text-xs px-6 py-2.5 h-auto font-medium"
+          variant="default"
+          size="lg"
+          className="gap-2"
         >
-          <Save className="h-3.5 w-3.5" />
+          <Save className="h-4 w-4" />
           <span>Save Settings &amp; AI Engine Configuration</span>
         </Button>
       </form>
