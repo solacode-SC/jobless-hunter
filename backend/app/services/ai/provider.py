@@ -31,6 +31,10 @@ class AIProvider:
     def __init__(self):
         self.active_provider_override: str | None = None
 
+    @property
+    def active_preference(self) -> str:
+        return self.active_provider_override or settings.AI_PROVIDER or "auto"
+
     def get_configured_providers(self) -> list[ProviderConfig]:
         """Return list of candidate providers in preference order."""
         providers: list[ProviderConfig] = []

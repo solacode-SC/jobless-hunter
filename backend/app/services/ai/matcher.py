@@ -11,6 +11,7 @@ from app.models.job import Job, JobStatus
 from app.models.candidate import CandidateProfile
 from app.services.ai.provider import ai_provider
 from app.services.ai.prompts import MATCH_SYSTEM_PROMPT, MATCH_USER_PROMPT
+from app.services.ai.blocklist import check_job_blocklist
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,57 @@ class JobMatcher:
     ) -> dict[str, Any]:
         """Evaluate candidate fit for a job and persist score/status."""
         logger.info("Evaluating candidate fit for job: %s at %s", job.title, job.company)
+
+        # 1. First evaluate against Candidate Blocklist Rules (Companies, Regions, Roles, Keywords)
+        candidate_pref = candidate.preferences or {}
+        block_keys = candidate_pref.get("block_keys")
+
+        is_blocked, block_reason = check_job_blocklist(
+            title=job.title,
+            company=job.company,
+            location=job.location,
+            description=job.description,
+            required_skills=job.required_skills,
+            block_keys=block_keys,
+        )
+
+        if is_blocked:
+            logger.info("Job '%s' (ID: %s) SKIPPED by blocklist rule: %s", job.title, job.id, block_reason)
+            job.match_score = 0.0
+            job.match_explanation = f"SKIPPED by blocklist rule: {block_reason}"
+            job.status = JobStatus.DISQUALIFIED
+
+            if job.raw_data is None:
+                job.raw_data = {}
+            job.raw_data["blocked"] = True
+            job.raw_data["block_reason"] = block_reason
+            job.raw_data["ai_evaluation"] = {
+                "score": 0,
+                "classification": "blocked",
+                "explanation": f"SKIPPED by blocklist rule: {block_reason}",
+                "matched_skills": [],
+                "missing_skills": [],
+                "strengths": [],
+                "gaps": [block_reason],
+            }
+
+            await db.commit()
+            await db.refresh(job)
+
+            return {
+                "job_id": str(job.id),
+                "score": 0,
+                "status": job.status.value,
+                "classification": "blocked",
+                "explanation": f"SKIPPED by blocklist rule: {block_reason}",
+                "matched_skills": [],
+                "missing_skills": [],
+                "strengths": [],
+                "gaps": [block_reason],
+            }
+
+        # 2. Dynamic Qualification Threshold
+        threshold = candidate_pref.get("qualification_threshold", self.threshold)
 
         user_content = MATCH_USER_PROMPT.format(
             candidate_name=candidate.name,
@@ -60,7 +112,7 @@ class JobMatcher:
             job.match_explanation = explanation
 
             # Classification
-            if score >= self.threshold:
+            if score >= threshold:
                 job.status = JobStatus.QUALIFIED
             else:
                 job.status = JobStatus.DISQUALIFIED

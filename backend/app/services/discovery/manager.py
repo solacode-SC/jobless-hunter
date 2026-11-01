@@ -8,7 +8,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.job import Job, JobStatus
+from app.models.candidate import CandidateProfile
 from app.utils.fingerprint import generate_job_fingerprint
+from app.services.ai.blocklist import check_job_blocklist
 from app.services.discovery.base import BaseConnector, DiscoveredJob
 from app.services.discovery.remote_boards import RemoteBoardsConnector
 from app.services.discovery.linkedin import LinkedInConnector
@@ -43,6 +45,11 @@ class DiscoveryManager:
         new_jobs_count = 0
         duplicates_count = 0
 
+        # Retrieve candidate block keys if configured
+        cand_res = await db.execute(select(CandidateProfile).limit(1))
+        candidate = cand_res.scalar_one_or_none()
+        block_keys = candidate.preferences.get("block_keys") if candidate and candidate.preferences else None
+
         for connector in self.connectors:
             if sources and connector.source_name.value not in sources:
                 continue
@@ -66,6 +73,21 @@ class DiscoveryManager:
                         duplicates_count += 1
                         continue
 
+                    # Check candidate blocklist rules
+                    is_blocked, block_reason = check_job_blocklist(
+                        title=item.title,
+                        company=item.company,
+                        location=item.location,
+                        description=item.description,
+                        required_skills=item.required_skills,
+                        block_keys=block_keys,
+                    )
+
+                    raw_data = dict(item.raw_data or {})
+                    if is_blocked:
+                        raw_data["blocked"] = True
+                        raw_data["block_reason"] = block_reason
+
                     new_job = Job(
                         title=item.title,
                         company=item.company,
@@ -82,8 +104,10 @@ class DiscoveryManager:
                         source_url=item.source_url,
                         source_job_id=item.source_job_id,
                         fingerprint=fp,
-                        status=JobStatus.DISCOVERED,
-                        raw_data=item.raw_data,
+                        status=JobStatus.DISQUALIFIED if is_blocked else JobStatus.DISCOVERED,
+                        match_score=0.0 if is_blocked else None,
+                        match_explanation=f"SKIPPED by blocklist rule: {block_reason}" if is_blocked else None,
+                        raw_data=raw_data,
                     )
                     db.add(new_job)
                     new_jobs_count += 1

@@ -15,6 +15,7 @@ import {
   Clock,
   ShieldCheck,
   Bot,
+  Ban,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/main-layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -206,12 +207,25 @@ export default function JobDetailPage({
                       </p>
                     </div>
 
-                    {job.match_explanation && (
+                    {job.match_explanation?.includes('SKIPPED by blocklist') ? (
+                      <div className="text-xs bg-red-50 p-3.5 rounded-lg border-2 border-red-900 shadow-[2px_2px_0_#991b1b]">
+                        <div className="flex items-center gap-1.5 font-marker text-red-900 mb-1">
+                          <Ban className="w-4 h-4 text-red-600" />
+                          <span>Skipped by Candidate Blocklist Rule</span>
+                        </div>
+                        <p className="font-mono text-xs text-red-800 leading-snug">{job.match_explanation}</p>
+                        <div className="mt-2 pt-2 border-t border-red-200">
+                          <Link href="/settings" className="font-mono text-[11px] underline text-red-900 hover:text-black font-bold">
+                            Adjust exclusion block keys in Settings →
+                          </Link>
+                        </div>
+                      </div>
+                    ) : job.match_explanation ? (
                       <div className="text-xs bg-[#FFFFFF] p-3.5 rounded-lg border-2 border-[#111111] shadow-[2px_2px_0_#111111]">
                         <p className="font-marker text-xs text-[#111111] mb-1">Match Rationale</p>
                         <p className="font-hand text-sm text-[#111111] leading-snug">{job.match_explanation}</p>
                       </div>
-                    )}
+                    ) : null}
 
                     {aiEval?.matched_skills && aiEval.matched_skills.length > 0 && (
                       <div>

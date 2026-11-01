@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.core.database import engine, Base
 from app.core.redis import init_redis, close_redis
-from app.api.routes import auth, jobs, applications, documents, candidates, discovery, analytics, health, ai
+from app.api.routes import auth, jobs, applications, documents, candidates, discovery, analytics, health, ai, settings as settings_route
 from app.models.candidate import CandidateProfile
 from app.api.routes.candidates import get_or_create_candidate
 from app.core.database import async_session_factory
@@ -83,6 +83,7 @@ app.include_router(candidates.router, prefix="/api")
 app.include_router(discovery.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(ai.router, prefix="/api")
+app.include_router(settings_route.router, prefix="/api")
 app.include_router(health.router, prefix="/api")
 
 

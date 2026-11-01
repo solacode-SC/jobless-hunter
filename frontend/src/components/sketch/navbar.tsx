@@ -13,6 +13,7 @@ const navLinks = [
   { name: 'Pipeline', href: '/applications' },
   { name: 'CV & Cover', href: '/cv-manager' },
   { name: 'Profile', href: '/profile' },
+  { name: 'Settings', href: '/settings' },
   { name: 'Workflows', href: '/automation' },
 ];
 
