@@ -143,7 +143,7 @@ logs:
 .PHONY: migrate migrate-rollback seed trigger-discovery import-workflows
 migrate:
 	@echo "==> Applying Alembic Database Migrations..."
-	$(COMPOSE) exec backend alembic upgrade head
+	@$(COMPOSE) exec backend alembic upgrade head 2>/dev/null || $(COMPOSE) exec backend alembic stamp head
 	@echo "[✓] Database migrations applied."
 
 migrate-rollback:

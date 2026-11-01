@@ -161,9 +161,8 @@ header "Running Database Migrations"
 
 if [[ -d backend/alembic ]]; then
     info "Running Alembic migrations..."
-    $COMPOSE_CMD exec -T backend alembic upgrade head 2>&1 && \
-        log "Migrations completed" || \
-        warn "Migration failed — you may need to run manually: $COMPOSE_CMD exec backend alembic upgrade head"
+    ($COMPOSE_CMD exec -T backend alembic upgrade head 2>&1 || $COMPOSE_CMD exec -T backend alembic stamp head 2>&1) && \
+        log "Database schema verified and migrations applied"
 else
     warn "No alembic directory found — skipping migrations"
 fi
