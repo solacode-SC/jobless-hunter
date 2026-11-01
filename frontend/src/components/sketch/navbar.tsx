@@ -12,6 +12,7 @@ const navLinks = [
   { name: 'Jobs', href: '/jobs' },
   { name: 'Pipeline', href: '/applications' },
   { name: 'CV & Cover', href: '/cv-manager' },
+  { name: 'Profile', href: '/profile' },
   { name: 'Workflows', href: '/automation' },
 ];
 
